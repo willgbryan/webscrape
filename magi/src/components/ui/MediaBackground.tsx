@@ -70,6 +70,7 @@ export const BackgroundMedia: React.FC<BackgroundMediaProps> = ({
           ref={mediaRef}
           aria-hidden="true"
           muted
+          loop
           className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300 pointer-events-none"
           autoPlay
           playsInline
@@ -94,7 +95,7 @@ export const BackgroundMedia: React.FC<BackgroundMediaProps> = ({
   return (
     <div className={mediaClasses}>
       {renderMedia()}
-      {type === "video" && (
+      {/* {type === "video" && (
         <button
           aria-label={isPlaying ? "Pause video" : "Play video"}
           className="absolute bottom-4 right-4 z-50 px-4 py-2 bg-gray-900 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
@@ -102,7 +103,7 @@ export const BackgroundMedia: React.FC<BackgroundMediaProps> = ({
         >
           {isPlaying ? "Pause" : "Play"}
         </button>
-      )}
+      )} */}
     </div>
   )
 }
