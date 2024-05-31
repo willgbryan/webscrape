@@ -1,74 +1,79 @@
-import Image from "next/image"
-import Link from "next/link"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import '../app/globals.css';
-import { SparklesCore } from "@/components/ui/Sparkles"
-import { GradientHeading } from "@/components/ui/GradientHeading"
-import { TextureCardContent, TextureCardHeader, TextureCardStyled } from "@/components/ui/TextureCard"
-import { Textarea } from "@/components/ui/textarea"
-import { AnimatedNumber } from "@/components/ui/NumberAnimations"
-import { useState } from "react"
+import { SparklesCore } from "@/components/ui/Sparkles";
+import { GradientHeading } from "@/components/ui/GradientHeading";
+import { TextureCardContent, TextureCardHeader, TextureCardStyled } from "@/components/ui/TextureCard";
+import { AnimatedNumber } from "@/components/ui/NumberAnimations";
+import { submitScrapeRequest, WebSocketManager } from "@/services/api";
 
 function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, showDetails, setShowDetails }) {
     const [scrapeTopic, setScrapeTopic] = useState('');
     const [columns, setColumns] = useState('');
+    const [websocketManager] = useState(new WebSocketManager());
 
     const handleScrapeTopicChange = (e) => {
         setScrapeTopic(e.target.value);
-    }
+    };
 
     const handleColumnsChange = (e) => {
         const value = e.target.value;
         setColumns(value);
 
-        // Show details when the user starts typing
         if (!showDetails && value.length > 0) {
             setShowDetails(true);
         }
 
-        // Extract row count
-        const rowCountMatch = value.match(/row count:\s*(\d+)/i)
-        const rowCount = rowCountMatch ? parseInt(rowCountMatch[1], 10) : 0
+        const rowCountMatch = value.match(/row count:\s*(\d+)/i);
+        const rowCount = rowCountMatch ? parseInt(rowCountMatch[1], 10) : 0;
+        const columnsCount = value.split(',').map(v => v.trim()).filter(v => v !== '' && !v.toLowerCase().startsWith('row count:')).length;
 
-        // Extract columns
-        const columnsCount = value.split(',').map(v => v.trim()).filter(v => v !== '' && !v.toLowerCase().startsWith('row count:')).length
-
-        setNumRows(rowCount)
-        setNumColumns(columnsCount)
-    }
+        setNumRows(rowCount);
+        setNumColumns(columnsCount);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const formData = {
-            task: scrapeTopic,
-            sources: columns.split(',').map(column => column.trim()).filter(column => column && !column.toLowerCase().startsWith('row count:'))
-        };
-
         try {
-            const response = await fetch('http://localhost:8000/ws', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
+            const data = await submitScrapeRequest(scrapeTopic, columns.split(','));
+            console.log('Form submitted successfully', data);
+            // Connect to WebSocket and handle real-time updates
+            websocketManager.connect('ws://localhost:8000/ws', (data) => {
+                console.log('WebSocket message received:', data);
+                handleWebSocketMessage(data);
+            }, (error) => {
+                console.error('WebSocket error:', error);
             });
-
-            if (response.ok) {
-                // Handle successful response
-                const data = await response.json();
-                console.log('Form submitted successfully', data);
-            } else {
-                // Handle error response
-                console.error('Form submission failed');
-            }
         } catch (error) {
             console.error('Error submitting form:', error);
         }
-    }
+    };
+
+    const handleWebSocketMessage = (data) => {
+        console.log("Received data of type:", data.type);
+        let accumulatedData = '';
+
+        if (data.type === 'logs') {
+          addAgentResponse(data);
+        } else if (data.type === 'report') {
+          accumulatedData += data.output;
+        //   writeReport(data);
+        }
+      };
+
+      const addAgentResponse = (data) => {
+        const output = document.getElementById("output");
+        output.innerHTML += '<div class="agent_response">' + data.output + '</div>';
+        output.scrollTop = output.scrollHeight;
+        output.style.display = "block";
+      };
+
+      const writeReport = (data) => {
+        // Implement your logic to handle report
+      };
 
     return (
         <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
@@ -146,7 +151,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
 function PrecisionExample({ numColumns }) {

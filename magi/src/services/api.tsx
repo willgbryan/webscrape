@@ -38,7 +38,12 @@ export class WebSocketManager {
     }
   }
   
-  export async function submitForm(formData: any) {
+  export const submitScrapeRequest = async (task: string, columns: string[]): Promise<any> => {
+    const formData = {
+      task,
+      sources: columns.map(column => column.trim()).filter(column => column && !column.toLowerCase().startsWith('row count:'))
+    };
+  
     try {
       const response = await fetch(`${baseURL}/ws`, {
         method: 'POST',
@@ -57,5 +62,5 @@ export class WebSocketManager {
       console.error('Error submitting form:', error);
       throw error;
     }
-  }
+  };
   
