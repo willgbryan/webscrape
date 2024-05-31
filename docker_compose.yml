@@ -1,0 +1,33 @@
+services:
+  searxng:
+    image: searxng/searxng:latest
+    volumes:
+      - ./searxng/settings.yml:/etc/searxng/settings.yml
+    ports:
+      - "8080:8080"
+    networks:
+      - reach-network
+  magi-next-app:
+    build: ./magi
+    image: magi:latest
+    volumes:
+      - ./magi:/usr/src/app/magi
+    ports:
+      - "3000:3000"
+    networks:
+      - magi-network
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/usr/src/app/backend
+    environment:
+      SEARX_URL: ${SEARX_HOST}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "8000:8000"
+    networks:
+      - reach-network
+
+networks:
+  magi-network:
+    driver: bridge

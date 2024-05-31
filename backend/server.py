@@ -9,8 +9,6 @@ from typing import List
 from backend.utils.websocket_manager import WebSocketManager
 from utils import write_md_to_pdf
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-load_dotenv()
 
 
 class ResearchRequest(BaseModel):
@@ -73,8 +71,3 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)

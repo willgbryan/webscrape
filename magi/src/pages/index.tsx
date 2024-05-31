@@ -13,8 +13,16 @@ import { AnimatedNumber } from "@/components/ui/NumberAnimations"
 import { useState } from "react"
 
 function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, showDetails, setShowDetails }) {
-    const handleInputChange = (e) => {
-        const value = e.target.value
+    const [scrapeTopic, setScrapeTopic] = useState('');
+    const [columns, setColumns] = useState('');
+
+    const handleScrapeTopicChange = (e) => {
+        setScrapeTopic(e.target.value);
+    }
+
+    const handleColumnsChange = (e) => {
+        const value = e.target.value;
+        setColumns(value);
 
         // Show details when the user starts typing
         if (!showDetails && value.length > 0) {
@@ -26,16 +34,46 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
         const rowCount = rowCountMatch ? parseInt(rowCountMatch[1], 10) : 0
 
         // Extract columns
-        const columns = value.split(',').map(v => v.trim()).filter(v => v !== '' && !v.toLowerCase().startsWith('row count:')).length
+        const columnsCount = value.split(',').map(v => v.trim()).filter(v => v !== '' && !v.toLowerCase().startsWith('row count:')).length
 
         setNumRows(rowCount)
-        setNumColumns(columns)
+        setNumColumns(columnsCount)
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const formData = {
+            task: scrapeTopic,
+            sources: columns.split(',').map(column => column.trim()).filter(column => column && !column.toLowerCase().startsWith('row count:'))
+        };
+
+        try {
+            const response = await fetch('http://localhost:8000/ws', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                // Handle successful response
+                const data = await response.json();
+                console.log('Form submitted successfully', data);
+            } else {
+                // Handle error response
+                console.error('Form submission failed');
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+        }
     }
 
     return (
         <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
             <div className="flex items-center justify-center py-12">
-                <div className="mx-auto grid w-[350px] gap-6">
+                <form className="mx-auto grid w-[350px] gap-6" onSubmit={handleSubmit}>
                     <div className="grid gap-2 text-center">
                         <h1 className="text-3xl font-bold">Magi</h1>
                         <p className="text-balance text-muted-foreground">
@@ -49,7 +87,8 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                                 id="prompt"
                                 type="text"
                                 placeholder="Austin VC Firms"
-                                onChange={handleInputChange}
+                                value={scrapeTopic}
+                                onChange={handleScrapeTopicChange}
                                 required
                             />
                         </div>
@@ -61,7 +100,8 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                                 id="columns" 
                                 type="text" 
                                 placeholder="firm name, fund size, row count: 10"
-                                onChange={handleInputChange}
+                                value={columns}
+                                onChange={handleColumnsChange}
                                 required 
                             />
                         </div>
@@ -69,7 +109,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                             Curate
                         </Button>
                     </div>
-                </div>
+                </form>
             </div>
             <div className="relative hidden bg-muted lg:block">
                 <div className="h-[56rem] w-full bg-black flex flex-col items-center justify-center overflow-hidden rounded-md">
