@@ -82,7 +82,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                     <div className="grid gap-2 text-center">
                         <h1 className="text-3xl font-bold">Magi</h1>
                         <p className="text-balance text-muted-foreground">
-                            Webscraping like you wouldn't believe.
+                            Webscraping like you would not believe.
                         </p>
                     </div>
                     <div className="grid gap-4">
