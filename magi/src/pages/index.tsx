@@ -40,8 +40,8 @@ function CollectionExample({ setNumColumns, setNumRows }) {
         <GradientHeading variant="light" size="sm">What would you like to collect?</GradientHeading>
       </TextureCardHeader>
       <TextureCardContent className="flex flex-col gap-4">
-        <Textarea placeholder="Type your message here." onChange={handleInputChange} />
-        <Input type="text" placeholder="column 1, column 2, column 3, row count: 500" onChange={handleInputChange} />
+        <Textarea placeholder="Type your message here." onChange={handleInputChange} className="bg-transparent text-white placeholder:text-gray border-white/10 border shadow-lg" />
+        <Input type="text" placeholder="column 1, column 2, column 3, row count: 500" onChange={handleInputChange} className="bg-transparent text-white placeholder:text-gray border-white/10 border shadow-lg" />
       </TextureCardContent>
     </TextureCardStyled>
   )
@@ -57,7 +57,7 @@ function PrecisionExample({ numColumns }) {
       <TextureCardContent>
         <div className="flex gap-2">
           <div
-            className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-neutral-200 to-[#3a1cff]"
+            className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-neutral-200 to-[#ff7300]"
             style={{ minWidth: "80px", textAlign: "left" }}
           >
             <AnimatedNumber value={numColumns} precision={0} />
@@ -78,7 +78,7 @@ function FormatExample({ numRows }) {
       <TextureCardContent>
         <div className="flex gap-2">
           <div
-            className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-neutral-200 to-[#3a1cff]"
+            className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-neutral-200 to-[#ff7300]"
             style={{ minWidth: "80px", textAlign: "left" }}
           >
             <AnimatedNumber value={numRows} precision={0} />
@@ -99,7 +99,7 @@ function CostExample({ numColumns, numRows }) {
         <GradientHeading variant="light" size="xs">Cost</GradientHeading>
       </TextureCardHeader>
       <TextureCardContent>
-        <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-neutral-200 to-[#3a1cff]" style={{ minWidth: "50px", textAlign: "left" }}>
+        <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-neutral-200 to-[#ff7300]" style={{ minWidth: "50px", textAlign: "left" }}>
           <AnimatedNumber value={cost} precision={2} />
         </div>
       </TextureCardContent>
@@ -129,7 +129,7 @@ export function MainPage() {
       <BackgroundMedia
         type="video"
         variant="light"
-        src="https://videos.pexels.com/video-files/9851047/9851047-hd_1280_720_30fps.mp4"
+        src="https://videos.pexels.com/video-files/15364192/15364192-hd_1280_720_30fps.mp4"
       />
       <div className="absolute bottom-4 right-4 ">
         <FamilyButton>
