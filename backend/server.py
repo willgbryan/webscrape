@@ -7,7 +7,7 @@ import os
 import aiofiles
 from typing import List
 from backend.utils.websocket_manager import WebSocketManager
-from utils import write_md_to_pdf
+from output_gen_utils import write_md_to_pdf
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -19,8 +19,10 @@ class ResearchRequest(BaseModel):
 app = FastAPI()
 
 origins = [
-    "http://reach-next-app:3000",
-    "http://localhost:3000"
+    "http://magi-next-app:3000",
+    "http://localhost:3000",
+    "https://magi-next-app:3000",
+    "https://localhost:3000"
 ]
 
 app.add_middleware(
@@ -54,9 +56,11 @@ def startup_event():
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
+    print("WebSocket connected")
     try:
         while True:
             data = await websocket.receive_text()
+            print("Received data:", data)
             if data.startswith("start"):
                 json_data = json.loads(data[6:])
                 task = json_data.get("task")
@@ -68,6 +72,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     await websocket.send_json({"type": "path", "output": path})
                 else:
                     print("Error: not enough parameters provided.")
-
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
+        print("WebSocket disconnected")
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+

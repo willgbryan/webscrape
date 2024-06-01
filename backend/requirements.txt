@@ -31,5 +31,4 @@ htmldocx
 lxml[html_clean]
 litellm
 youtube-transcript-api
-git+https://github.com/openai/whisper.git
 aiofiles 

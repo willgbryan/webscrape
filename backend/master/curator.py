@@ -63,7 +63,7 @@ class Curator:
                 context: List of context
             """
             context = []
-            sub_queries = await get_sub_queries(query, self.role, self.cfg, self.parent_query, self.report_type) + [query]
+            sub_queries = await get_sub_queries(query, self.cfg, self.parent_query, self.report_type) + [query]
             await stream_output("logs",
                                 f"I will conduct my research based on the following queries: {sub_queries}...",
                                 self.websocket)

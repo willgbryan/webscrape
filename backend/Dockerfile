@@ -17,7 +17,7 @@ RUN apt-get update \
     && mv geckodriver /usr/local/bin/ \
     && rm -rf /var/lib/apt/lists/*
 
-# Define the reach-install stage that builds on the install-browser stage
+# Define the magi-install stage that builds on the install-browser stage
 FROM install-browser as magi-install
 
 # Set an environment variable to ignore root user actions with pip
@@ -31,18 +31,18 @@ WORKDIR /usr/src/app
 COPY ./requirements.txt ./requirements.txt
 RUN pip install -r requirements.txt
 
-# Define the final stage, "reach", based on the reach-install stage
-FROM magi-install AS reach
+# Define the final stage, "magi", based on the magi-install stage
+FROM magi-install AS magi
 
 # Create a non-root user for running the application
-RUN useradd -ms /bin/bash reach \
-    && chown -R reach:reach /usr/src/app
+RUN useradd -ms /bin/bash magi \
+    && chown -R magi:magi /usr/src/app
 
 # Switch to the non-root user
 USER magi
 
 # Copy the application code with appropriate ownership
-COPY --chown=reach:reach ./ ./
+COPY --chown=magi:magi ./ ./
 
 # Expose the application port
 EXPOSE 8000

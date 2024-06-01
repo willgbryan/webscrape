@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,18 +7,26 @@ import { SparklesCore } from "@/components/ui/Sparkles";
 import { GradientHeading } from "@/components/ui/GradientHeading";
 import { TextureCardContent, TextureCardHeader, TextureCardStyled } from "@/components/ui/TextureCard";
 import { AnimatedNumber } from "@/components/ui/NumberAnimations";
-import { submitScrapeRequest, WebSocketManager } from "@/services/api";
 
-function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, showDetails, setShowDetails }) {
+interface CollectionExampleProps {
+    setNumColumns: (numColumns: number) => void;
+    setNumRows: (numRows: number) => void;
+    numColumns: number;
+    numRows: number;
+    showDetails: boolean;
+    setShowDetails: (showDetails: boolean) => void;
+}
+
+function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, showDetails, setShowDetails }: CollectionExampleProps) {
     const [scrapeTopic, setScrapeTopic] = useState('');
     const [columns, setColumns] = useState('');
-    const [websocketManager] = useState(new WebSocketManager());
+    // const [websocketManager] = useState(new WebSocketManager());
 
-    const handleScrapeTopicChange = (e) => {
+    const handleScrapeTopicChange = (e: ChangeEvent<HTMLInputElement>) => {
         setScrapeTopic(e.target.value);
     };
 
-    const handleColumnsChange = (e) => {
+    const handleColumnsChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setColumns(value);
 
@@ -34,46 +42,72 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
         setNumColumns(columnsCount);
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
+        console.log('Good submit')
         try {
-            const data = await submitScrapeRequest(scrapeTopic, columns.split(','));
-            console.log('Form submitted successfully', data);
-            // Connect to WebSocket and handle real-time updates
-            websocketManager.connect('ws://localhost:8000/ws', (data) => {
-                console.log('WebSocket message received:', data);
-                handleWebSocketMessage(data);
-            }, (error) => {
-                console.error('WebSocket error:', error);
-            });
+            listenToSockEvents();
         } catch (error) {
             console.error('Error submitting form:', error);
         }
     };
+    
+    const listenToSockEvents = () => {
+        const { protocol, host } = window.location;
+        const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8000/ws`;
+        const socket = new WebSocket(ws_uri);
 
-    const handleWebSocketMessage = (data) => {
-        console.log("Received data of type:", data.type);
-        let accumulatedData = '';
+        console.log('listening')
+    
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log("Received data of type:", data.type);
+            if (data.type === 'logs') {
+                addAgentResponse(data);
+            }
+        };
+    
+        socket.onopen = () => {
+            console.log('open')
+            const taskInput = document.querySelector('#prompt') as HTMLInputElement;
+            if (!taskInput) {
+                console.error('Task input not found');
+                return;
+            }
+            const task = taskInput.value;
+            console.log(`task: ${task}`)
+    
+            const requestData = {
+                task: task,
+            };
+            console.log(`requestData: ${JSON.stringify(requestData)}`)
+    
+            socket.send(`start ${JSON.stringify(requestData)}`);
+        };
+    
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+    
+        socket.onclose = (event) => {
+            console.log('WebSocket closed:', event);
+        };
+    };
+    
+    
 
-        if (data.type === 'logs') {
-          addAgentResponse(data);
-        } else if (data.type === 'report') {
-          accumulatedData += data.output;
-        //   writeReport(data);
-        }
-      };
-
-      const addAgentResponse = (data) => {
+    const addAgentResponse = (data: { output: string }) => {
         const output = document.getElementById("output");
-        output.innerHTML += '<div class="agent_response">' + data.output + '</div>';
-        output.scrollTop = output.scrollHeight;
-        output.style.display = "block";
-      };
+        if (output) {
+            output.innerHTML += '<div class="agent_response">' + data.output + '</div>';
+            output.scrollTop = output.scrollHeight;
+            output.style.display = "block";
+        }
+    };
 
-      const writeReport = (data) => {
+    const writeReport = (data: { output: string }) => {
         // Implement your logic to handle report
-      };
+    };
 
     return (
         <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
@@ -154,7 +188,11 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
     );
 }
 
-function PrecisionExample({ numColumns }) {
+interface PrecisionExampleProps {
+    numColumns: number;
+}
+
+function PrecisionExample({ numColumns }: PrecisionExampleProps) {
     return (
         <TextureCardStyled>
             <TextureCardHeader className="text-center">
@@ -172,7 +210,11 @@ function PrecisionExample({ numColumns }) {
     )
 }
 
-function FormatExample({ numRows }) {
+interface FormatExampleProps {
+    numRows: number;
+}
+
+function FormatExample({ numRows }: FormatExampleProps) {
     return (
         <TextureCardStyled>
             <TextureCardHeader className="text-center">
@@ -190,8 +232,13 @@ function FormatExample({ numRows }) {
     )
 }
 
-function CostExample({ numColumns, numRows }) {
-    const cost = numColumns * numRows * 0.015
+interface CostExampleProps {
+    numColumns: number;
+    numRows: number;
+}
+
+function CostExample({ numColumns, numRows }: CostExampleProps) {
+    const cost = numColumns * numRows * 0.015;
 
     return (
         <TextureCardStyled>
@@ -208,9 +255,9 @@ function CostExample({ numColumns, numRows }) {
 }
 
 function OgImageSection() {
-    const [numColumns, setNumColumns] = useState(0)
-    const [numRows, setNumRows] = useState(0)
-    const [showDetails, setShowDetails] = useState(false)
+    const [numColumns, setNumColumns] = useState(0);
+    const [numRows, setNumRows] = useState(0);
+    const [showDetails, setShowDetails] = useState(false);
 
     return (
         <div className="w-full flex flex-col gap-2 justify-between pt-6">

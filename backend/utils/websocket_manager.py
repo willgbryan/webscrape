@@ -5,7 +5,7 @@ from typing import Dict, List
 
 from fastapi import WebSocket
 
-from backend.outputs.data_table import DataTable
+from backend.outputs import DataTable
 
 
 class WebSocketManager:
