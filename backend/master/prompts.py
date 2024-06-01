@@ -2,7 +2,7 @@ import json
 from typing import List
 from datetime import datetime, timezone
 
-def generate_search_queries_prompt(question: str, parent_query: str, report_type: str, uploaded_files: List[str], max_iterations: int=3) -> str:
+def generate_search_queries_prompt(question: str, uploaded_files: List[str], max_iterations: int=3) -> str:
     """ Generates the search queries prompt for the given question in JSON format.
     Args: 
         question (str): The question to generate the search queries prompt for
@@ -16,7 +16,7 @@ def generate_search_queries_prompt(question: str, parent_query: str, report_type
     """
 
     prompt = {
-        "task": f"Write {max_iterations} google search queries to search online that form an objective opinion from the following task: \"{task}\"",
+        "task": f"Write {max_iterations} google search queries to search online that form an objective opinion from the following task: \"{question}\"",
         "date_needed": f"Use the current date if needed: {datetime.now().strftime('%B %d, %Y')}.",
         "files_info": f"Files can be present and questions can be asked about them. Uploaded files if any: {uploaded_files}",
         "additional_instructions": "Also include in the queries specified task details such as locations, names, etc.",
@@ -42,3 +42,8 @@ def generate_row_prompt(query, data):
 def generate_role_prompt():
     return "You are the worlds premier data collection expert that accels in creating balanced, and comprehensive datasets." \
            "Presented with a corpus of information and existing collected data, your goal is to parse the corpus to add to the collected data."
+
+def generate_subquery_role_prompt():
+    return "You are the worlds premier data collection expert that accels in creating balanced, and comprehensive datasets." \
+           "Presented with a user's question, your task is to come up with topics to search in order to collect a balanced and comprehensive" \
+           "corpus of research to be analyzed."

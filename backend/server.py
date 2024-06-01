@@ -60,12 +60,13 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            print("Received data:", data)
+            print(f"Received data: {data}")
             if data.startswith("start"):
                 json_data = json.loads(data[6:])
                 task = json_data.get("task")
                 sources = json_data.get("sources", [])
-                
+                print(f"Parsed task: {task}, sources: {sources}")
+
                 if task:
                     report = await manager.start_streaming(task, sources, websocket)
                     path = await write_md_to_pdf(report)
@@ -77,4 +78,3 @@ async def websocket_endpoint(websocket: WebSocket):
         print("WebSocket disconnected")
     except Exception as e:
         print(f"WebSocket error: {e}")
-

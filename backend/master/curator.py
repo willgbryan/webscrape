@@ -1,7 +1,7 @@
 import time
 from backend.config.config import Config
 from backend.context.compression import ContextCompressor
-from backend.master.prompts import generate_role_prompt
+from backend.master.prompts import generate_role_prompt, generate_subquery_role_prompt
 from backend.memory.embeddings import Memory
 from backend.utils.functions import generate_row, get_retriever, get_sub_queries, scrape_urls, stream_output
 
@@ -62,8 +62,8 @@ class Curator:
             Returns:
                 context: List of context
             """
-            context = []
-            sub_queries = await get_sub_queries(query, self.cfg, self.parent_query, self.report_type) + [query]
+            prompt = generate_subquery_role_prompt()
+            sub_queries = await get_sub_queries(query=query, agent_role_prompt=prompt, cfg=self.cfg) + [query]
             await stream_output("logs",
                                 f"I will conduct my research based on the following queries: {sub_queries}...",
                                 self.websocket)
@@ -115,8 +115,8 @@ class Curator:
         new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
 
         # Scrape Urls
-        # await stream_output("logs", f"📝Scraping urls {new_search_urls}...\n", self.websocket)
-        await stream_output("logs", f"Researching for relevant information...\n", self.websocket)
+        await stream_output("logs", f"📝Scraping urls {new_search_urls}...\n", self.websocket)
+        # await stream_output("logs", f"Researching for relevant information...\n", self.websocket)
         scraped_content_results = scrape_urls(new_search_urls, self.cfg)
         return scraped_content_results
 
@@ -130,7 +130,7 @@ class Curator:
     
     async def create_dataset(self):
 
-        dataset = generate_row(
+        dataset = await generate_row(
             query=self.query, 
             context=self.context,
             websocket=self.websocket,

@@ -56,7 +56,7 @@ def get_retriever(retriever):
 
     return retriever
 
-async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str, report_type:str):
+async def get_sub_queries(query: str, agent_role_prompt: str, cfg, ):
     """
     Gets the sub queries
     Args:
@@ -80,8 +80,6 @@ async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query:
             {"role": "system", "content": f"{agent_role_prompt}"},
             {"role": "user", "content": generate_search_queries_prompt(
                 query, 
-                parent_query, 
-                report_type, 
                 uploaded_files,
                 max_iterations=max_research_iterations
                 )

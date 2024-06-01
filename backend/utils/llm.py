@@ -10,19 +10,19 @@ from fastapi import WebSocket
 from langchain_openai import ChatOpenAI
 
 
-def get_provider(llm_provider = "openai"):
-    # match llm_provider:
-    #     case "openai":
-    #         from ..llm_provider import OpenAIProvider
-    #         llm_provider = OpenAIProvider
-    #     case "ollama":
-    #         from ..llm_provider import OllamaProvider
-    #         llm_provider = OllamaProvider
-    #     case "llama-cpp":
-    #         from ..llm_provider import CplusplusProvider
-    #         llm_provider = CplusplusProvider
-    #     case _:
-    #         raise Exception("LLM provider not found.")
+def get_provider(llm_provider):
+    match llm_provider:
+        case "openai":
+            from ..llm_provider import OpenAIProvider
+            llm_provider = OpenAIProvider
+        case "ollama":
+            from ..llm_provider import OllamaProvider
+            llm_provider = OllamaProvider
+        case "llama-cpp":
+            from ..llm_provider import CplusplusProvider
+            llm_provider = CplusplusProvider
+        case _:
+            raise Exception("LLM provider not found.")
     return llm_provider
 
 async def create_chat_completion(

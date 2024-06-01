@@ -51,50 +51,75 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
             console.error('Error submitting form:', error);
         }
     };
-    
+
+    type LogLevel = 'info' | 'warn' | 'error';
+
+    const log = (level: LogLevel, message: string): void => {
+        if (console[level]) {
+            console[level](`[${level.toUpperCase()}] ${message}`);
+        } else {
+            console.log(`[LOG] ${message}`);
+        }
+    };
+
     const listenToSockEvents = () => {
         const { protocol, host } = window.location;
         const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8000/ws`;
         const socket = new WebSocket(ws_uri);
 
-        console.log('listening')
-    
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log("Received data of type:", data.type);
-            if (data.type === 'logs') {
-                addAgentResponse(data);
-            }
-        };
-    
+        log('info', 'Connecting to WebSocket...');
+
         socket.onopen = () => {
-            console.log('open')
+            log('info', 'WebSocket connection opened');
+
             const taskInput = document.querySelector('#prompt') as HTMLInputElement;
             if (!taskInput) {
-                console.error('Task input not found');
+                log('error', 'Task input not found');
                 return;
             }
+            
+            const columnHeaders = document.querySelector('#columns') as HTMLInputElement;
+            if(!columnHeaders) {
+                log('error', 'No column headers provided');
+                return;
+            }
+
+            const rowCount = document.querySelector('#columns') as HTMLInputElement;
+            if(!rowCount) {
+                log('error', 'No column headers provided');
+                return;
+            }
+
             const task = taskInput.value;
-            console.log(`task: ${task}`)
-    
-            const requestData = {
-                task: task,
-            };
-            console.log(`requestData: ${JSON.stringify(requestData)}`)
-    
+            log('info', `Task: ${task}`);
+
+            const requestData = { task };
+            log('info', `Request data: ${JSON.stringify(requestData)}`);
+
             socket.send(`start ${JSON.stringify(requestData)}`);
         };
-    
-        socket.onerror = (error) => {
-            console.error('WebSocket error:', error);
+
+        socket.onmessage = (event) => {
+            log('info', 'WebSocket message received');
+            try {
+                const data = JSON.parse(event.data);
+                log('info', `Received data of type: ${data.type}`);
+                if (data.type === 'logs') {
+                    addAgentResponse(data);
+                }
+            } catch (error) {
+                log('error', `Error processing message: ${error}`);
+            }
         };
-    
-        socket.onclose = (event) => {
-            console.log('WebSocket closed:', event);
+
+        socket.onerror = (event: Event) => {
+            log('error', `WebSocket error: ${JSON.stringify(event)}`);
+        };
+
+        socket.onclose = (event: CloseEvent) => {
+            log('info', `WebSocket closed: ${event.code}`);
         };
     };
-    
-    
 
     const addAgentResponse = (data: { output: string }) => {
         const output = document.getElementById("output");
