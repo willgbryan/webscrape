@@ -1,9 +1,11 @@
 import time
+import pandas as pd
 from backend.config.config import Config
 from backend.context.compression import ContextCompressor
 from backend.master.prompts import generate_role_prompt, generate_subquery_role_prompt
 from backend.memory.embeddings import Memory
-from backend.utils.functions import generate_row, get_retriever, get_sub_queries, scrape_urls, stream_output
+from backend.utils.functions import generate_row, get_retriever, get_sub_queries, scrape_urls, stream_output, summarize_dataframe
+from backend.utils.llm import parse_chat_completion_for_csv
 
 class Curator:
     def __init__(
@@ -24,6 +26,7 @@ class Curator:
         self.source_urls = source_urls
         self.columns = columns
         self.rows = rows
+        self.existing_data = pd.DataFrame()
         self.memory = Memory(self.cfg.embedding_provider)
         self.visited_urls = visited_urls
 
@@ -57,7 +60,7 @@ class Curator:
 
             if web_content:
                 await stream_output("logs", f"{web_content}", self.websocket)
-                content.extend(web_content)
+                content.append(web_content)
             else:
                 await stream_output("logs", f"No content found for '{sub_query}'...", self.websocket)
         print(f"Collected content: {content}")
@@ -87,14 +90,41 @@ class Curator:
         context_compressor = ContextCompressor(documents=pages, embeddings=self.memory.get_embeddings())
         return context_compressor.get_context(query, max_results=8)
     
-    async def create_dataset(self):
-        dataset = await generate_row(
-            context=self.context,
-            columns=self.columns,
-            websocket=self.websocket,
-            role_prompt=generate_role_prompt(), #existing data
-            cfg=self.cfg
-        )
-        print(f'Dataset: {dataset}')
-        print(f'Columns: {self.columns}')
-        return dataset
+    async def create_rows(self):
+        check_len = 0
+
+        while check_len < self.rows:
+            if not self.existing_data.empty:
+                existing_dataset_str = summarize_dataframe(self.existing_data)
+                print(f'Markdown DF: {existing_dataset_str}')
+            else:
+                existing_dataset_str = "Nothing has been collected yet."
+                print("Markdown DF: DataFrame is empty. First pass.")
+
+            print(f'pass in context: {self.context}')
+
+            dataset = await generate_row(
+                existing_data=existing_dataset_str,
+                context=self.context,
+                columns=self.columns,
+                websocket=self.websocket,
+                role_prompt=generate_role_prompt(),  # existing data
+                cfg=self.cfg
+            )
+
+            new_data = parse_chat_completion_for_csv(dataset)
+            if not new_data.empty:
+                if not self.existing_data.empty and not self.existing_data.equals(new_data):
+                    print(f'class attr: {self.existing_data}')
+                    print(f'new stuff: {new_data}')
+                    self.existing_data = pd.concat([self.existing_data, new_data], ignore_index=True)
+                elif self.existing_data.empty:
+                    print(f'first round stuff: {new_data}')
+                    self.existing_data = new_data
+            else:
+                print("No new data to add.")
+
+            check_len = len(self.existing_data)
+
+        output_dataset = self.existing_data
+        return output_dataset

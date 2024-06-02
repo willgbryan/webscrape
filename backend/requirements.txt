@@ -5,6 +5,7 @@ colorama
 duckduckgo_search
 md2pdf
 playwright
+pandas
 openai
 python-dotenv
 pyyaml
@@ -18,10 +19,12 @@ markdown
 langchain
 arxiv
 PyMuPDF
+tabulate
 requests
 jinja2
 aiofiles
 newspaper3k
+numpy
 git+https://github.com/willgbryan/langchain-reach-edition.git#subdirectory=libs/community&egg=langchain_community
 SQLAlchemy
 langchain-openai

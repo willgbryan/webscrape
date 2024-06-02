@@ -50,7 +50,6 @@ class WebSocketManager:
 
     async def start_streaming(self, task, columns, rows, websocket):
         """Start streaming the output."""
-        print(f'stream start cols: {columns}')
         dataset = await iter_curate(task, columns, rows, websocket)
         return dataset
 
@@ -69,10 +68,10 @@ async def iter_curate(task, columns, rows, websocket):
         config_path=config_path, 
         websocket=websocket
     )
-    report = await researcher.run()
+    dataset = await researcher.run()
 
     end_time = datetime.datetime.now()
     await websocket.send_json({"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"})
 
-    print(f'Report: {report}')
-    return report
+    print(f'Dataset: {dataset}')
+    return dataset

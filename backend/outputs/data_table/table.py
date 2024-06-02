@@ -23,6 +23,6 @@ class DataTable:
 
         await researcher.conduct_research()
 
-        report = await researcher.create_dataset()
+        dataset = await researcher.create_rows()
 
-        return report 
+        return dataset

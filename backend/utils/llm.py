@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import logging
 import asyncio
+import pandas as pd
+from io import StringIO
 from typing import Optional
 
 from colorama import Fore, Style
@@ -73,3 +75,11 @@ async def create_chat_completion(
         return response
     logging.error("Failed to get response from OpenAI API")
     raise RuntimeError("Failed to get response from OpenAI API")
+
+def parse_chat_completion_for_csv(output: str) -> pd.DataFrame:
+    csv_content = output.split("```csv\n", 1)[1].rsplit("\n```", 1)[0]
+    data = StringIO(csv_content)
+    df = pd.read_csv(data)
+    print(f'Data: {data}')
+    print(f'df: {df}')
+    return df
