@@ -64,11 +64,12 @@ async def websocket_endpoint(websocket: WebSocket):
             if data.startswith("start"):
                 json_data = json.loads(data[6:])
                 task = json_data.get("task")
-                sources = json_data.get("sources", [])
-                print(f"Parsed task: {task}, sources: {sources}")
+                columns = json_data.get("columnHeaders")
+                rows = json_data.get("rowCount")
+                print(f"Parsed task: {task}, columns: {columns}, rows: {rows}")
 
                 if task:
-                    report = await manager.start_streaming(task, sources, websocket)
+                    report = await manager.start_streaming(task, columns, rows, websocket)
                     path = await write_md_to_pdf(report)
                     await websocket.send_json({"type": "path", "output": path})
                 else:

@@ -13,16 +13,16 @@ class Config:
         self.embedding_provider = os.getenv("EMBEDDING_PROVIDER", "openai")
         self.llm_provider = os.getenv("LLM_PROVIDER", "openai")
         self.fast_llm_model = os.getenv(
-            "FAST_LLM_MODEL", "gpt-3.5-turbo-16k"
+            "FAST_LLM_MODEL", "gpt-4o"
         )  # mistral:instruct
         self.smart_llm_model = os.getenv(
-            "SMART_LLM_MODEL", "gpt-4-1106-preview"
+            "SMART_LLM_MODEL", "gpt-4o"
         )  # mistral:instruct
         self.fast_token_limit = int(os.getenv("FAST_TOKEN_LIMIT", 2000))
         self.smart_token_limit = int(os.getenv("SMART_TOKEN_LIMIT", 4000))
         self.browse_chunk_max_length = int(os.getenv("BROWSE_CHUNK_MAX_LENGTH", 8192))
         self.summary_token_limit = int(os.getenv("SUMMARY_TOKEN_LIMIT", 700))
-        self.temperature = float(os.getenv("TEMPERATURE", 0.55))
+        self.temperature = float(os.getenv("TEMPERATURE", 0.1))
         self.user_agent = os.getenv(
             "USER_AGENT",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -32,10 +32,9 @@ class Config:
             os.getenv("MAX_SEARCH_RESULTS_PER_QUERY", 5)
         )
         self.memory_backend = os.getenv("MEMORY_BACKEND", "local")
-        self.max_iterations = int(os.getenv("MAX_ITERATIONS", 5))
+        self.max_iterations = int(os.getenv("MAX_ITERATIONS", 2))
         self.agent_role = os.getenv("AGENT_ROLE", None)
         self.scraper = os.getenv("SCRAPER", "bs")
-        self.max_subtopics = os.getenv("MAX_SUBTOPICS", 8)
 
         self.load_config_file()
 

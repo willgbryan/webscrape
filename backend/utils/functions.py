@@ -10,14 +10,13 @@ from backend.utils.llm import create_chat_completion
 
 
 async def generate_row(
-        query,
         context,
+        columns,
         websocket,
         role_prompt,
         cfg,
     ):
-        data = ""
-        content = (f"{generate_row_prompt(query, context)}")
+        content = (f"{generate_row_prompt(context, columns)}")
 
         try:
             report = await create_chat_completion(
@@ -35,7 +34,7 @@ async def generate_row(
         except Exception as e:
             print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")
 
-        return data
+        return report
 
 def get_retriever(retriever):
     """

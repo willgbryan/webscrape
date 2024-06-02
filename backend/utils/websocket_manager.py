@@ -48,21 +48,31 @@ class WebSocketManager:
             del self.sender_tasks[websocket]
             del self.message_queues[websocket]
 
-    async def start_streaming(self, task, sources, websocket):
+    async def start_streaming(self, task, columns, rows, websocket):
         """Start streaming the output."""
-        report = await curate(task, sources, websocket)
-        return report
+        print(f'stream start cols: {columns}')
+        dataset = await iter_curate(task, columns, rows, websocket)
+        return dataset
 
 
-async def curate(task, sources, websocket):
+async def iter_curate(task, columns, rows, websocket):
     """Run the scrape"""
     start_time = datetime.datetime.now()
+    print(f'stream start cols: {columns}')
 
     config_path = None
-    researcher = DataTable(query=task, source_urls=None, sources=sources, config_path=config_path, websocket=websocket)
+    researcher = DataTable(
+        query=task, 
+        source_urls=None, 
+        columns=columns, 
+        rows=rows,
+        config_path=config_path, 
+        websocket=websocket
+    )
     report = await researcher.run()
 
     end_time = datetime.datetime.now()
     await websocket.send_json({"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"})
 
+    print(f'Report: {report}')
     return report

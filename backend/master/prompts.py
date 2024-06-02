@@ -36,14 +36,15 @@ def generate_summary_prompt(query, data):
            f'query cannot be answered using the text, YOU MUST summarize the text in short.\n Include all factual ' \
            f'information such as numbers, stats, quotes, etc if available. '
 
-def generate_row_prompt(query, data):
-    return f"Task: Analyze the provided data: {data}, and return information relevant to the users question: {query}"
+def generate_row_prompt(data, columns):
+    return f"Presented with a corpus of information: {data}." \
+           f"Your task is to parse the corpus and populate the columns: {columns}." \
+           f"Return valid .csv with column headers: {columns}, populated with appropriate values from the corpus. DO NOT add new column headers."
 
 def generate_role_prompt():
-    return "You are the worlds premier data collection expert that accels in creating balanced, and comprehensive datasets." \
-           "Presented with a corpus of information and existing collected data, your goal is to parse the corpus to add to the collected data."
+    return "You are the worlds premier data collection expert that accels in creating balanced, and comprehensive datasets."
 
-def generate_subquery_role_prompt():
+def generate_subquery_role_prompt(columns):
     return "You are the worlds premier data collection expert that accels in creating balanced, and comprehensive datasets." \
-           "Presented with a user's question, your task is to come up with topics to search in order to collect a balanced and comprehensive" \
-           "corpus of research to be analyzed."
+           f"Presented with a user's question and column headers: {columns},"\
+           "your task is to come up with topics to search in order to collect a balanced and comprehensive corpus of research to be analyzed."

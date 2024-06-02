@@ -66,39 +66,50 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
         const { protocol, host } = window.location;
         const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8000/ws`;
         const socket = new WebSocket(ws_uri);
-
+    
         log('info', 'Connecting to WebSocket...');
-
+    
         socket.onopen = () => {
             log('info', 'WebSocket connection opened');
-
+    
             const taskInput = document.querySelector('#prompt') as HTMLInputElement;
             if (!taskInput) {
                 log('error', 'Task input not found');
                 return;
             }
             
-            const columnHeaders = document.querySelector('#columns') as HTMLInputElement;
+            // Retrieve the columns input value
+            const columnsInput = document.querySelector('#columns') as HTMLInputElement;
+            if(!columnsInput) {
+                log('error', 'Columns input not found');
+                return;
+            }
+            const columnsValue = columnsInput.value;
+    
+            const columnHeaders = columnsValue.split(',')
+                                .map(v => v.trim())
+                                .filter(v => v !== '' && !v.toLowerCase().startsWith('row count:'))
+                                .join(', ');
+            console.log(`Column headers: ${columnHeaders}`)
+
+            const rowCountMatch = columnsValue.match(/row count:\s*(\d+)/i);
+            const rowCount = rowCountMatch ? parseInt(rowCountMatch[1], 10) : 0;
+            console.log(`Row count: ${rowCount}`)
+
             if(!columnHeaders) {
                 log('error', 'No column headers provided');
                 return;
             }
-
-            const rowCount = document.querySelector('#columns') as HTMLInputElement;
-            if(!rowCount) {
-                log('error', 'No column headers provided');
-                return;
-            }
-
+    
             const task = taskInput.value;
             log('info', `Task: ${task}`);
-
-            const requestData = { task };
+    
+            const requestData = { task, columnHeaders, rowCount };
             log('info', `Request data: ${JSON.stringify(requestData)}`);
-
+    
             socket.send(`start ${JSON.stringify(requestData)}`);
         };
-
+    
         socket.onmessage = (event) => {
             log('info', 'WebSocket message received');
             try {
@@ -111,11 +122,11 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                 log('error', `Error processing message: ${error}`);
             }
         };
-
+    
         socket.onerror = (event: Event) => {
             log('error', `WebSocket error: ${JSON.stringify(event)}`);
         };
-
+    
         socket.onclose = (event: CloseEvent) => {
             log('info', `WebSocket closed: ${event.code}`);
         };
