@@ -25,4 +25,8 @@ class DataTable:
 
         dataset = await researcher.create_rows()
 
-        return dataset
+        final_dataset = await researcher.fill_empty_rows(dataset)
+
+        print(f'Run successful: {final_dataset}')
+
+        return final_dataset

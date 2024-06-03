@@ -1,11 +1,12 @@
+import asyncio
 import time
 import pandas as pd
 from backend.config.config import Config
 from backend.context.compression import ContextCompressor
-from backend.master.prompts import generate_role_prompt, generate_subquery_role_prompt
+from backend.master.prompts import generate_role_prompt, generate_subquery_role_prompt, fill_empty_value_prompt, empty_value_prompt
 from backend.memory.embeddings import Memory
 from backend.utils.functions import generate_row, get_retriever, get_sub_queries, scrape_urls, stream_output, summarize_dataframe
-from backend.utils.llm import parse_chat_completion_for_csv
+from backend.utils.llm import create_chat_completion, parse_chat_completion_for_csv
 
 class Curator:
     def __init__(
@@ -91,40 +92,90 @@ class Curator:
         return context_compressor.get_context(query, max_results=8)
     
     async def create_rows(self):
-        check_len = 0
+        # check_len = 0
+        # iter = 1
 
-        while check_len < self.rows:
-            if not self.existing_data.empty:
-                existing_dataset_str = summarize_dataframe(self.existing_data)
-                print(f'Markdown DF: {existing_dataset_str}')
-            else:
-                existing_dataset_str = "Nothing has been collected yet."
-                print("Markdown DF: DataFrame is empty. First pass.")
+        # while check_len < self.rows:
+        if not self.existing_data.empty:
+            existing_dataset_str = await summarize_dataframe(self.existing_data)
+            print(f'Markdown DF: {existing_dataset_str}')
+        else:
+            existing_dataset_str = "Nothing has been collected yet."
+            print("Markdown DF: DataFrame is empty. First pass.")
 
-            print(f'pass in context: {self.context}')
+        print(f'pass in context: {self.context}')
 
-            dataset = await generate_row(
-                existing_data=existing_dataset_str,
-                context=self.context,
-                columns=self.columns,
-                websocket=self.websocket,
-                role_prompt=generate_role_prompt(),  # existing data
-                cfg=self.cfg
-            )
+        dataset = await generate_row(
+            existing_data=existing_dataset_str,
+            context=self.context,
+            columns=self.columns,
+            websocket=self.websocket,
+            role_prompt=generate_role_prompt(),  # existing data
+            cfg=self.cfg
+        )
 
-            new_data = parse_chat_completion_for_csv(dataset)
-            if not new_data.empty:
-                if not self.existing_data.empty and not self.existing_data.equals(new_data):
-                    print(f'class attr: {self.existing_data}')
-                    print(f'new stuff: {new_data}')
-                    self.existing_data = pd.concat([self.existing_data, new_data], ignore_index=True)
-                elif self.existing_data.empty:
-                    print(f'first round stuff: {new_data}')
-                    self.existing_data = new_data
-            else:
-                print("No new data to add.")
+        # print(f'pass {iter}: {dataset}')
 
-            check_len = len(self.existing_data)
+        new_data = await parse_chat_completion_for_csv(dataset)
+        await asyncio.sleep(0)  # Ensures new_data is fully instantiated before proceeding
+            # new_data.reset_index(drop=True, inplace=True)
+            
+            # print(f'Existing data:\n{self.existing_data}')
+            # print(f'New data:\n{new_data}')
+            # print(f"Type of existing_data: {type(self.existing_data)}, columns: {self.existing_data.columns}")
+            # print(f"Type of new_data: {type(new_data)}, columns: {new_data.columns}")
 
-        output_dataset = self.existing_data
+            # if new_data.empty:
+            #     print("New data is empty, skipping this iteration.")
+            #     continue
+
+            # if self.existing_data.columns.size == 0:
+            #     print("Existing data is empty, initializing with new data columns.")
+            #     self.existing_data = pd.DataFrame(columns=new_data.columns)
+            #     print(f'Initialized existing data columns: {self.existing_data.columns}')
+
+            # if set(self.existing_data.columns) != set(new_data.columns):
+            #     print(f"Column mismatch between existing and new data. Existing columns: {self.existing_data.columns}, New columns: {new_data.columns}")
+            #     raise ValueError("Column mismatch between existing and new data frames")
+
+            # self.existing_data = pd.concat([self.existing_data, new_data]).drop_duplicates().reset_index(drop=True)
+            # check_len = len(self.existing_data)
+            # print(f'Updated existing data:\n{self.existing_data}')
+
+        output_dataset = new_data
         return output_dataset
+
+    
+    async def fill_empty_rows(self, dataset: pd.DataFrame) -> pd.DataFrame:
+        final_dataset = dataset.copy()
+        for index, row in dataset.iterrows():
+            for column in dataset.columns:
+                print(f'column iter: {column}')
+                if pd.isnull(row[column]) or row[column] == '':
+
+                    prompt = empty_value_prompt(row)
+                    new_context = await self.get_context_by_search(prompt)
+                    role_prompt = generate_role_prompt()
+                    generate_value_prompt = fill_empty_value_prompt(new_context, self.query, row, column)
+
+                    value = await create_chat_completion(
+                            model=self.cfg.smart_llm_model,
+                            messages=[
+                                {"role": "system", "content": f"{role_prompt}"},
+                                {"role": "user", "content": generate_value_prompt}
+                            ],
+                            temperature=0,
+                            llm_provider=self.cfg.llm_provider,
+                            stream=True,
+                            websocket=self.websocket,
+                            max_tokens=self.cfg.smart_token_limit
+                        )
+                    print(f'generated value: {value}')
+
+                    if value:
+                        final_dataset.at[index, column] = value
+
+                    print(f'Updated dataset at {[index, column]} with {value}')
+
+        return final_dataset
+

@@ -39,7 +39,7 @@ async def generate_row(
 
         return report
 
-def summarize_dataframe(df, sample_rows=5, sample_columns=20):
+async def summarize_dataframe(df, sample_rows=5, sample_columns=20):
     """
     Create a summary of a Pandas DataFrame for ChatGPT.
 
@@ -59,9 +59,9 @@ def summarize_dataframe(df, sample_rows=5, sample_columns=20):
     missing_values['% Missing'] = missing_values['Missing Values'] / num_rows * 100
 
     ## Data type summary for all columns
-    column_info = pd.concat([df.dtypes, missing_values], axis=1).reset_index()
-    column_info.columns = ["Column Name", "Data Type", "Missing Values", "% Missing"]
-    column_info['Data Type'] = column_info['Data Type'].astype(str)
+    # column_info = pd.concat([df.dtypes, missing_values], axis=1).reset_index()
+    # column_info.columns = ["Column Name", "Data Type", "Missing Values", "% Missing"]
+    # column_info['Data Type'] = column_info['Data Type'].astype(str)
 
     # Basic summary statistics for numerical and categorical columns
     # get basic statistical information for each column
@@ -82,6 +82,7 @@ def summarize_dataframe(df, sample_rows=5, sample_columns=20):
     sample_columns = min(sample_columns, df.shape[1])
     sample_rows = min(sample_rows, df.shape[0])
     sampled = df.sample(sample_columns, axis=1).sample(sample_rows, axis=0)
+    columns = df.columns()
 
     tablefmt = "github"
 
@@ -90,7 +91,7 @@ def summarize_dataframe(df, sample_rows=5, sample_columns=20):
         f"## Dataframe Summary\n\n"
         f"Number of Rows: {num_rows:,}\n\n"
         f"Number of Columns: {num_cols:,}\n\n"
-        f"### Column Information\n\n{column_info.to_markdown(tablefmt=tablefmt)}\n\n"
+        f"### Column Information\n\n{columns.to_markdown(tablefmt=tablefmt)}\n\n"
         f"### Numerical Summary\n\n{numerical_summary.to_markdown(tablefmt=tablefmt)}\n\n"
         f"### Categorical Summary\n\n{categorical_summary.to_markdown(tablefmt=tablefmt)}\n\n"
         f"### Sample Data ({sample_rows}x{sample_columns})\n\n{sampled.to_markdown(tablefmt=tablefmt)}"
