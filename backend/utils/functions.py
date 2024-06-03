@@ -91,10 +91,12 @@ async def summarize_dataframe(df, sample_rows=5, sample_columns=20):
         f"## Dataframe Summary\n\n"
         f"Number of Rows: {num_rows:,}\n\n"
         f"Number of Columns: {num_cols:,}\n\n"
-        f"### Column Information\n\n{columns_df.to_markdown(tablefmt=tablefmt)}\n\n"
+        # f"### Column Information\n\n{columns_df.to_markdown(tablefmt=tablefmt)}\n\n"
+        f"### Column Information\n\n{columns_df}\n\n"
         # f"### Numerical Summary\n\n{numerical_summary.to_markdown(tablefmt=tablefmt)}\n\n"
         # f"### Categorical Summary\n\n{categorical_summary.to_markdown(tablefmt=tablefmt)}\n\n"
-        f"### Sample Data ({sample_rows}x{sample_columns})\n\n{sampled.to_markdown(tablefmt=tablefmt)}"
+        # f"### Sample Data ({sample_rows}x{sample_columns})\n\n{sampled.to_markdown(tablefmt=tablefmt)}"
+         f"### Sample Data ({sample_rows}x{sample_columns})\n\n{sampled}"
     )
 
     return output
@@ -133,17 +135,16 @@ async def get_sub_queries(query: str, agent_role_prompt: str, cfg, ):
     """
     max_research_iterations = cfg.max_iterations if cfg.max_iterations else 1
 
-    if os.path.exists("uploads"):
-        uploaded_files = [f for f in os.listdir("uploads") if os.path.isfile(os.path.join("uploads", f))]
-    else:
-        uploaded_files = ""
+    # if os.path.exists("uploads"):
+    #     uploaded_files = [f for f in os.listdir("uploads") if os.path.isfile(os.path.join("uploads", f))]
+    # else:
+    #     uploaded_files = ""
     response = await create_chat_completion(
         model=cfg.smart_llm_model,
         messages=[
             {"role": "system", "content": f"{agent_role_prompt}"},
             {"role": "user", "content": generate_search_queries_prompt(
                 query, 
-                uploaded_files,
                 max_iterations=max_research_iterations
                 )
             }
@@ -151,6 +152,7 @@ async def get_sub_queries(query: str, agent_role_prompt: str, cfg, ):
         temperature=0,
         llm_provider=cfg.llm_provider
     )
+    print(f'response: {response}')
     sub_queries = json.loads(response)
     return sub_queries
 

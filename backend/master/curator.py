@@ -48,8 +48,14 @@ class Curator:
         return web_results
 
     async def get_context_by_search(self, query):
+        print('hit')
         prompt = generate_subquery_role_prompt(self.columns)
+        print(f'prompt: {prompt}')
+        print(f'query: {query}')
+        print(f'cfg: {self.cfg}')
+
         sub_queries = await get_sub_queries(query=query, agent_role_prompt=prompt, cfg=self.cfg) + [query]
+        print(f'sub queries: {sub_queries}')
         await stream_output("logs", f"I will conduct my research based on the following queries: {sub_queries}...", self.websocket)
 
         content = []
@@ -153,10 +159,10 @@ class Curator:
             for column in dataset.columns:
                 print(f'column iter: {column}')
                 if pd.isnull(row[column]) or row[column] == 'Not found':
-                    print(f'Row to prompt: {row}')
-                    prompt = empty_value_prompt(row)
-                    print(f'Prompt to context: {prompt}')
-                    new_context = await self.get_context_by_search(prompt)
+                    row_str = row.to_markdown(tablefmt="github")
+                    print(f'Row to prompt: {row_str}')
+
+                    new_context = await self.get_context_by_search(row_str)
                     role_prompt = generate_role_prompt()
                     print(f'role prompt: {role_prompt}')
                     generate_value_prompt = fill_empty_value_prompt(new_context, self.query, row, column)
