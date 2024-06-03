@@ -15,6 +15,7 @@ interface CollectionExampleProps {
     numRows: number;
     showDetails: boolean;
     setShowDetails: (showDetails: boolean) => void;
+
 }
 
 function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, showDetails, setShowDetails }: CollectionExampleProps) {
@@ -115,7 +116,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
             try {
                 const data = JSON.parse(event.data);
                 log('info', `Received data of type: ${data.type}`);
-                if (data.type === 'logs') {
+                if (data.type === 'dataset') {
                     addAgentResponse(data);
                 }
             } catch (error) {
@@ -132,12 +133,49 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
         };
     };
 
+    interface Record {
+        [key: string]: string;
+    }
+
     const addAgentResponse = (data: { output: string }) => {
         const output = document.getElementById("output");
         if (output) {
-            output.innerHTML += '<div class="agent_response">' + data.output + '</div>';
-            output.scrollTop = output.scrollHeight;
-            output.style.display = "block";
+            // Clear previous content
+            output.innerHTML = '';
+    
+            try {
+                // Assuming data.output is a JSON string
+                const records: Record[] = JSON.parse(data.output);
+                records.forEach((record: Record) => {
+                    const recordDiv = document.createElement('div');
+                    recordDiv.className = 'record';
+    
+                    Object.entries(record).forEach(([key, value]) => {
+                        const fieldDiv = document.createElement('div');
+                        fieldDiv.className = 'field';
+    
+                        const keySpan = document.createElement('span');
+                        keySpan.className = 'key';
+                        keySpan.textContent = `${key}: `;
+    
+                        const valueSpan = document.createElement('span');
+                        valueSpan.className = 'value';
+                        valueSpan.textContent = value;
+    
+                        fieldDiv.appendChild(keySpan);
+                        fieldDiv.appendChild(valueSpan);
+                        recordDiv.appendChild(fieldDiv);
+                    });
+    
+                    output.appendChild(recordDiv);
+                });
+    
+                output.scrollTop = output.scrollHeight;
+                output.style.display = "block";
+            } catch (error) {
+                console.error('Error parsing JSON:', error);
+                output.innerHTML = '<div class="agent_response">Invalid JSON data received</div>';
+            }
         }
     };
 
@@ -189,35 +227,36 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
             <div className="relative hidden bg-muted lg:block">
                 <div className="h-[56rem] w-full bg-black flex flex-col items-center justify-center overflow-hidden rounded-md">
                     {showDetails && (
-                    <div>
-                        <div className="flex flex-col sm:flex-row gap-2 p-4 transition-opacity duration-500 opacity-0 animate-fade-in">
-                            <PrecisionExample numColumns={numColumns} />
-                            <FormatExample numRows={numRows} />
-                            <CostExample numColumns={numColumns} numRows={numRows} />
+                        <div>
+                            <div className="flex flex-col sm:flex-row gap-2 p-4 transition-opacity duration-500 opacity-0 animate-fade-in">
+                                <PrecisionExample numColumns={numColumns} />
+                                <FormatExample numRows={numRows} />
+                                <CostExample numColumns={numColumns} numRows={numRows} />
+                            </div>
+                        
+                            <div className="w-[40rem] h-40 relative">
+                                {/* Gradients */}
+                                <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
+                                <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-px w-3/4" />
+                                <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-[5px] w-1/4 blur-sm" />
+                                <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-px w-1/4" />
+                            
+                                {/* Core component */}
+                                <SparklesCore
+                                    background="transparent"
+                                    minSize={0.4}
+                                    maxSize={1}
+                                    particleDensity={Math.min(numRows, 4000)}  // Increase particle density with numRows, with a ceiling of 10000
+                                    className="w-full h-full"
+                                    particleColor="#FFFFFF"
+                                />
+                            
+                                {/* Radial Gradient to prevent sharp edges */}
+                                <div className="absolute inset-0 w-full h-full bg-black [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]"></div>
+                            </div>
                         </div>
-                    
-                    <div className="w-[40rem] h-40 relative">
-                        {/* Gradients */}
-                        <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
-                        <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-px w-3/4" />
-                        <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-[5px] w-1/4 blur-sm" />
-                        <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-px w-1/4" />
-                    
-                        {/* Core component */}
-                        <SparklesCore
-                            background="transparent"
-                            minSize={0.4}
-                            maxSize={1}
-                            particleDensity={Math.min(numRows, 4000)}  // Increase particle density with numRows, with a ceiling of 10000
-                            className="w-full h-full"
-                            particleColor="#FFFFFF"
-                        />
-                    
-                        {/* Radial Gradient to prevent sharp edges */}
-                        <div className="absolute inset-0 w-full h-full bg-black [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]"></div>
-                    </div>
-                    </div>
                     )}
+                    <div id="output" className="output-container mt-4 p-4 w-full h-96 overflow-auto text-white"></div>
                 </div>
             </div>
         </div>

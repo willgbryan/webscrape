@@ -70,9 +70,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 if task:
                     report = await manager.start_streaming(task, columns, rows, websocket)
-                    # path = await write_md_to_pdf(report)
-                    await websocket.send_json({"type": "path", "output": "NOT WRITING OUTPUTS YET, CHECK SERVER"})
-                    print(report)
+                    # Ensure the output is sent as a JSON string
+                    await websocket.send_json({"type": "dataset", "output": report})
+                    print(f"report: {report}")
                 else:
                     print("Error: not enough parameters provided.")
     except WebSocketDisconnect:
@@ -80,3 +80,5 @@ async def websocket_endpoint(websocket: WebSocket):
         print("WebSocket disconnected")
     except Exception as e:
         print(f"WebSocket error: {e}")
+
+

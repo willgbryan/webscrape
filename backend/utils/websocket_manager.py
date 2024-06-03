@@ -70,8 +70,11 @@ async def iter_curate(task, columns, rows, websocket):
     )
     dataset = await researcher.run()
 
+    # Convert dataset to JSON
+    dataset_json = dataset.to_json(orient="records")
+
     end_time = datetime.datetime.now()
     await websocket.send_json({"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"})
 
-    print(f'Dataset: {dataset}')
-    return dataset
+    print(f'Dataset: {dataset_json}')
+    return dataset_json
