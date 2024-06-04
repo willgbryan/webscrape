@@ -74,7 +74,7 @@
       @apply bg-background text-foreground;
     }
   }
-  
+
   @keyframes fade-in {
     from {
         opacity: 0;
@@ -85,5 +85,18 @@
 }
 
 .animate-fade-in {
-    animation: fade-in 1s forwards;
+  animation: fade-in 1s forwards;
+}
+
+@keyframes fade-out {
+  from {
+      opacity: 1;
+  }
+  to {
+      opacity: 0;
+  }
+}
+
+.animate-fade-out {
+  animation: fade-out 1s forwards;
 }

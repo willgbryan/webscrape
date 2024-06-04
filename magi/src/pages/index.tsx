@@ -7,6 +7,7 @@ import { SparklesCore } from "@/components/ui/Sparkles";
 import { GradientHeading } from "@/components/ui/GradientHeading";
 import { TextureCardContent, TextureCardHeader, TextureCardStyled } from "@/components/ui/TextureCard";
 import { AnimatedNumber } from "@/components/ui/NumberAnimations";
+import { DataTableDemo } from "@/components/ui/DataTable";
 
 interface CollectionExampleProps {
     setNumColumns: (numColumns: number) => void;
@@ -15,13 +16,12 @@ interface CollectionExampleProps {
     numRows: number;
     showDetails: boolean;
     setShowDetails: (showDetails: boolean) => void;
-
 }
 
 function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, showDetails, setShowDetails }: CollectionExampleProps) {
     const [scrapeTopic, setScrapeTopic] = useState('');
     const [columns, setColumns] = useState('');
-    // const [websocketManager] = useState(new WebSocketManager());
+    const [dataset, setDataset] = useState<any[]>([]); // State to hold the dataset
 
     const handleScrapeTopicChange = (e: ChangeEvent<HTMLInputElement>) => {
         setScrapeTopic(e.target.value);
@@ -43,8 +43,11 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
         setNumColumns(columnsCount);
     };
 
+    const detailsAnimationClass = showDetails ? 'animate-fade-in' : 'animate-fade-out';
+
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setShowDetails(false); // Hide details when "Curate" is clicked
         console.log('Good submit')
         try {
             listenToSockEvents();
@@ -53,9 +56,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
         }
     };
 
-    type LogLevel = 'info' | 'warn' | 'error';
-
-    const log = (level: LogLevel, message: string): void => {
+    const log = (level: 'info' | 'warn' | 'error', message: string): void => {
         if (console[level]) {
             console[level](`[${level.toUpperCase()}] ${message}`);
         } else {
@@ -67,26 +68,25 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
         const { protocol, host } = window.location;
         const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8000/ws`;
         const socket = new WebSocket(ws_uri);
-    
+
         log('info', 'Connecting to WebSocket...');
-    
+
         socket.onopen = () => {
             log('info', 'WebSocket connection opened');
-    
+
             const taskInput = document.querySelector('#prompt') as HTMLInputElement;
             if (!taskInput) {
                 log('error', 'Task input not found');
                 return;
             }
-            
-            // Retrieve the columns input value
+
             const columnsInput = document.querySelector('#columns') as HTMLInputElement;
             if(!columnsInput) {
                 log('error', 'Columns input not found');
                 return;
             }
             const columnsValue = columnsInput.value;
-    
+
             const columnHeaders = columnsValue.split(',')
                                 .map(v => v.trim())
                                 .filter(v => v !== '' && !v.toLowerCase().startsWith('row count:'))
@@ -101,86 +101,36 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                 log('error', 'No column headers provided');
                 return;
             }
-    
+
             const task = taskInput.value;
             log('info', `Task: ${task}`);
-    
+
             const requestData = { task, columnHeaders, rowCount };
             log('info', `Request data: ${JSON.stringify(requestData)}`);
-    
+
             socket.send(`start ${JSON.stringify(requestData)}`);
         };
-    
+
         socket.onmessage = (event) => {
             log('info', 'WebSocket message received');
             try {
                 const data = JSON.parse(event.data);
                 log('info', `Received data of type: ${data.type}`);
                 if (data.type === 'dataset') {
-                    addAgentResponse(data);
+                    setDataset(data.output); // Set the dataset state
                 }
             } catch (error) {
                 log('error', `Error processing message: ${error}`);
             }
         };
-    
+
         socket.onerror = (event: Event) => {
             log('error', `WebSocket error: ${JSON.stringify(event)}`);
         };
-    
+
         socket.onclose = (event: CloseEvent) => {
             log('info', `WebSocket closed: ${event.code}`);
         };
-    };
-
-    interface Record {
-        [key: string]: string;
-    }
-
-    const addAgentResponse = (data: { output: string }) => {
-        const output = document.getElementById("output");
-        if (output) {
-            // Clear previous content
-            output.innerHTML = '';
-    
-            try {
-                // Assuming data.output is a JSON string
-                const records: Record[] = JSON.parse(data.output);
-                records.forEach((record: Record) => {
-                    const recordDiv = document.createElement('div');
-                    recordDiv.className = 'record';
-    
-                    Object.entries(record).forEach(([key, value]) => {
-                        const fieldDiv = document.createElement('div');
-                        fieldDiv.className = 'field';
-    
-                        const keySpan = document.createElement('span');
-                        keySpan.className = 'key';
-                        keySpan.textContent = `${key}: `;
-    
-                        const valueSpan = document.createElement('span');
-                        valueSpan.className = 'value';
-                        valueSpan.textContent = value;
-    
-                        fieldDiv.appendChild(keySpan);
-                        fieldDiv.appendChild(valueSpan);
-                        recordDiv.appendChild(fieldDiv);
-                    });
-    
-                    output.appendChild(recordDiv);
-                });
-    
-                output.scrollTop = output.scrollHeight;
-                output.style.display = "block";
-            } catch (error) {
-                console.error('Error parsing JSON:', error);
-                output.innerHTML = '<div class="agent_response">Invalid JSON data received</div>';
-            }
-        }
-    };
-
-    const writeReport = (data: { output: string }) => {
-        // Implement your logic to handle report
     };
 
     return (
@@ -226,16 +176,15 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
             </div>
             <div className="relative hidden bg-muted lg:block">
                 <div className="h-[56rem] w-full bg-black flex flex-col items-center justify-center overflow-hidden rounded-md">
-                    {showDetails && (
+                    {showDetails ? (
                         <div>
-                            <div className="flex flex-col sm:flex-row gap-2 p-4 transition-opacity duration-500 opacity-0 animate-fade-in">
+                            <div className={`flex flex-col sm:flex-row gap-2 p-4 transition-opacity duration-500 opacity-0 ${detailsAnimationClass}`}>
                                 <PrecisionExample numColumns={numColumns} />
                                 <FormatExample numRows={numRows} />
                                 <CostExample numColumns={numColumns} numRows={numRows} />
                             </div>
                         
                             <div className="w-[40rem] h-40 relative">
-                                {/* Gradients */}
                                 <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
                                 <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-px w-3/4" />
                                 <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-[5px] w-1/4 blur-sm" />
@@ -255,8 +204,9 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                                 <div className="absolute inset-0 w-full h-full bg-black [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]"></div>
                             </div>
                         </div>
+                    ) : dataset.length > 0 && (
+                        <DataTableDemo data={dataset} />
                     )}
-                    <div id="output" className="output-container mt-4 p-4 w-full h-96 overflow-auto text-white"></div>
                 </div>
             </div>
         </div>
@@ -274,12 +224,12 @@ function PrecisionExample({ numColumns }: PrecisionExampleProps) {
                 <GradientHeading variant="light" size="sm">Columns</GradientHeading>
             </TextureCardHeader>
             <TextureCardContent>
-                    <div
-                        className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-sky-500 to-indigo-500"
-                        style={{ minWidth: "150px", textAlign: "center" }}
-                    >
-                        <AnimatedNumber value={numColumns} precision={0} />
-                    </div>
+                <div
+                    className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-sky-500 to-indigo-500"
+                    style={{ minWidth: "150px", textAlign: "center" }}
+                >
+                    <AnimatedNumber value={numColumns} precision={0} />
+                </div>
             </TextureCardContent>
         </TextureCardStyled>
     )
@@ -296,12 +246,12 @@ function FormatExample({ numRows }: FormatExampleProps) {
                 <GradientHeading variant="light" size="sm">Rows</GradientHeading>
             </TextureCardHeader>
             <TextureCardContent>
-                    <div
-                        className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-sky-500 to-indigo-500"
-                        style={{ minWidth: "150px", textAlign: "center" }}
-                    >
-                        <AnimatedNumber value={numRows} precision={0} />
-                    </div>
+                <div
+                    className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-sky-500 to-indigo-500"
+                    style={{ minWidth: "150px", textAlign: "center" }}
+                >
+                    <AnimatedNumber value={numRows} precision={0} />
+                </div>
             </TextureCardContent>
         </TextureCardStyled>
     )
@@ -327,6 +277,10 @@ function CostExample({ numColumns, numRows }: CostExampleProps) {
             </TextureCardContent>
         </TextureCardStyled>
     )
+}
+
+interface OgImageSectionProps {
+    dataset: any[];
 }
 
 function OgImageSection() {
