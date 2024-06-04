@@ -8,6 +8,7 @@ import { GradientHeading } from "@/components/ui/GradientHeading";
 import { TextureCardContent, TextureCardHeader, TextureCardStyled } from "@/components/ui/TextureCard";
 import { AnimatedNumber } from "@/components/ui/NumberAnimations";
 import { DataTableDemo } from "@/components/ui/DataTable";
+import { TextAnimate } from "@/components/ui/TextAnimations"
 
 interface CollectionExampleProps {
     setNumColumns: (numColumns: number) => void;
@@ -149,7 +150,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
     return (
         <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
             <div className="flex items-center justify-center py-12">
-                <form className="mx-auto grid w-[350px] gap-6" onSubmit={handleSubmit}>
+                <form className="mx-auto grid w-[350px] gap-6 animate-fade-in" onSubmit={handleSubmit}>
                     <div className="grid gap-2 text-center">
                         <h1 className="text-3xl font-bold">Magi</h1>
                         <p className="text-balance text-muted-foreground">
