@@ -117,7 +117,8 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                 const data = JSON.parse(event.data);
                 log('info', `Received data of type: ${data.type}`);
                 if (data.type === 'dataset') {
-                    setDataset(data.output); // Set the dataset state
+                    const parsedData = JSON.parse(data.output); // Ensure the data is parsed correctly
+                    setDataset(parsedData); // Set the dataset state
                 }
             } catch (error) {
                 log('error', `Error processing message: ${error}`);
