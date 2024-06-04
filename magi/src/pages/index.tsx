@@ -21,7 +21,11 @@ interface CollectionExampleProps {
 function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, showDetails, setShowDetails }: CollectionExampleProps) {
     const [scrapeTopic, setScrapeTopic] = useState('');
     const [columns, setColumns] = useState('');
-    const [dataset, setDataset] = useState<any[]>([]); // State to hold the dataset
+    const [dataset, setDataset] = useState<Record<string, any>>({});
+    const datasetArray = Object.values(dataset);
+
+
+    // const [dataset, setDataset] = useState<any[]>([]); // State to hold the dataset
 
     const handleScrapeTopicChange = (e: ChangeEvent<HTMLInputElement>) => {
         setScrapeTopic(e.target.value);
@@ -42,8 +46,6 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
         setNumRows(rowCount);
         setNumColumns(columnsCount);
     };
-
-    const detailsAnimationClass = showDetails ? 'animate-fade-in' : 'animate-fade-out';
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -115,11 +117,24 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
             log('info', 'WebSocket message received');
             try {
                 const data = JSON.parse(event.data);
-                log('info', `Received data of type: ${data.type}`);
-                if (data.type === 'dataset') {
-                    const parsedData = JSON.parse(data.output); // Ensure the data is parsed correctly
-                    setDataset(parsedData); // Set the dataset state
+                if (data.type === 'row_update') {
+                    setDataset(prevDataset => {
+                        // Check if the row already exists
+                        const existingRow = prevDataset[data.id];
+                        if (existingRow) {
+                            // If it exists, update the row
+                            return { ...prevDataset, [data.id]: { ...existingRow, ...data.output } };
+                        } else {
+                            // If it doesn't exist, add the new row
+                            return { ...prevDataset, [data.id]: data.output };
+                        }
+                    });
                 }
+                // log('info', `Received data of type: ${data.type}`);
+                // if (data.type === 'dataset') {
+                //     const parsedData = JSON.parse(data.output); // Ensure the data is parsed correctly
+                //     setDataset(parsedData); // Set the dataset state
+                // }
             } catch (error) {
                 log('error', `Error processing message: ${error}`);
             }
@@ -179,7 +194,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                 <div className="h-[56rem] w-full bg-black flex flex-col items-center justify-center overflow-hidden rounded-md">
                     {showDetails ? (
                         <div>
-                            <div className={`flex flex-col sm:flex-row gap-2 p-4 transition-opacity duration-500 opacity-0 ${detailsAnimationClass}`}>
+                            <div className={'flex flex-col sm:flex-row gap-2 p-4 transition-opacity duration-500 opacity-0 animate-fade-in'}>
                                 <PrecisionExample numColumns={numColumns} />
                                 <FormatExample numRows={numRows} />
                                 <CostExample numColumns={numColumns} numRows={numRows} />
@@ -205,8 +220,8 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                                 <div className="absolute inset-0 w-full h-full bg-black [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]"></div>
                             </div>
                         </div>
-                    ) : dataset.length > 0 && (
-                        <DataTableDemo data={dataset} />
+                    ) : datasetArray.length > 0 && (
+                        <DataTableDemo data={datasetArray} />
                     )}
                 </div>
             </div>

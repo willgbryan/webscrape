@@ -153,10 +153,11 @@ class Curator:
         return output_dataset
 
     async def fill_empty_rows(self, dataset: pd.DataFrame) -> pd.DataFrame:
+        iter = 0
         final_dataset = dataset.copy()
-        final_dataset.fillna('Not found')
-        for index, row in dataset.iterrows():
-            for column in dataset.columns:
+        final_dataset.fillna('Not found', inplace=True)
+        for index, row in final_dataset.iterrows():
+            for column in final_dataset.columns:
                 print(f'column iter: {column}')
                 if pd.isnull(row[column]) or row[column] == 'Not found':
                     row_str = row.to_markdown(tablefmt="github")
@@ -183,8 +184,10 @@ class Curator:
 
                     if value:
                         final_dataset.at[index, column] = value
-
-                    print(f'Updated dataset at {[index, column]} with {value}')
-
+                        updated_row = final_dataset.iloc[index].to_dict()
+                        # Use `index` directly for row_id to match the current row's index
+                        row_id = index
+                        print(f'row_id {row_id}, iteration {iter}')
+                        await self.websocket.send_json({"type": "row_update", "id": row_id, "output": updated_row})
+                        iter += 1
         return final_dataset
-

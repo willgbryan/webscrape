@@ -78,7 +78,7 @@ export function DataTableDemo({ data }: { data: any[] }) {
   })
 
   return (
-    <div className="w-full px-4">
+    <div className="w-full px-6">
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter..."
