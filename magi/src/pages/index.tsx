@@ -119,13 +119,10 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                 const data = JSON.parse(event.data);
                 if (data.type === 'row_update') {
                     setDataset(prevDataset => {
-                        // Check if the row already exists
                         const existingRow = prevDataset[data.id];
                         if (existingRow) {
-                            // If it exists, update the row
                             return { ...prevDataset, [data.id]: { ...existingRow, ...data.output } };
                         } else {
-                            // If it doesn't exist, add the new row
                             return { ...prevDataset, [data.id]: data.output };
                         }
                     });

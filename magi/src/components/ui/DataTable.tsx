@@ -17,6 +17,8 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useToast } from "@/components/ui/use-toast"
+
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -40,22 +42,45 @@ import {
 const generateColumns = (data: any[]): ColumnDef<any>[] => {
   if (data.length === 0) return [];
   const sample = data[0];
-  return Object.keys(sample).map((key) => ({
-    accessorKey: key,
-    header: key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase()),
-    cell: ({ row }: { row: any }) => <div className="text-white">{row.getValue(key)}</div>,
-  }));
+  return [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableColumnFilter: false,
+    },
+    ...Object.keys(sample).map((key) => ({
+      accessorKey: key,
+      header: key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase()),
+      cell: ({ row }: { row: any }) => <div className="text-white">{row.getValue(key)}</div>,
+    })),
+  ];
 };
 
 export function DataTableDemo({ data }: { data: any[] }) {
+  const { toast } = useToast()
+  
   const columns = React.useMemo(() => generateColumns(data), [data]);
 
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
   const table = useReactTable({
@@ -76,6 +101,35 @@ export function DataTableDemo({ data }: { data: any[] }) {
       rowSelection,
     },
   })
+
+  const copyToClipboard = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+  
+    const headers = columns.filter(col => col.id !== 'select').map(col => col.header as string);
+    const csvRows = [headers.join("\t")]; // Use tab character as separator
+  
+    selectedRows.forEach(row => {
+      const rowData = row.getVisibleCells().filter(cell => cell.column.id !== 'select').map(cell => {
+        let cellValue = cell.getValue() ?? "";
+        if (typeof cellValue === "string") {
+          cellValue = cellValue.replace(/\t/g, ' '); // Replace any tab characters within the data
+        }
+        return cellValue;
+      }).join("\t"); // Use tab character as separator
+      csvRows.push(rowData);
+    });
+  
+    const csvString = csvRows.join("\n");
+    navigator.clipboard.writeText(csvString).then(() => {
+      toast({
+        description: `Copied ${selectedRows.length} rows.`,
+      });
+    }).catch((err) => {
+      console.error("Could not copy text: ", err);
+    });
+  };
+  
 
   return (
     <div className="w-full px-6">
@@ -166,6 +220,12 @@ export function DataTableDemo({ data }: { data: any[] }) {
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          onClick={copyToClipboard}
+        >
+          Copy to Clipboard
+        </Button>
         <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.

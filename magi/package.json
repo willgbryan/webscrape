@@ -14,6 +14,7 @@
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slider": "^1.1.2",
     "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-toast": "^1.1.5",
     "@tanstack/react-table": "^8.17.3",
     "@tsparticles/engine": "^3.4.0",
     "@tsparticles/react": "^3.0.0",
