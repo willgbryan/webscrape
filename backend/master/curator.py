@@ -105,10 +105,10 @@ class Curator:
         while check_len < self.rows:
             if data_list:
                 dataset_cache = pd.DataFrame(data_list)
-                # print(f'Dataset cache pre summary: {dataset_cache}')
-                # print(f'Type of dataset_cache: {type(dataset_cache)}')
-                # existing_dataset_str = await summarize_dataframe(dataset_cache)
-                existing_dataset_str = 'test'
+                print(f'Dataset cache pre summary: {dataset_cache}')
+                print(f'Type of dataset_cache: {type(dataset_cache)}')
+                existing_dataset_str = await summarize_dataframe(dataset_cache)
+                # existing_dataset_str = 'test'
                 print(f'Markdown DF: {existing_dataset_str}')
             else:
                 existing_dataset_str = "Nothing has been collected yet."

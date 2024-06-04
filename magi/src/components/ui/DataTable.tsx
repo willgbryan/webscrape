@@ -43,7 +43,7 @@ const generateColumns = (data: any[]): ColumnDef<any>[] => {
   return Object.keys(sample).map((key) => ({
     accessorKey: key,
     header: key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase()),
-    cell: ({ row }: { row: any }) => <div>{row.getValue(key)}</div>,
+    cell: ({ row }: { row: any }) => <div className="text-white">{row.getValue(key)}</div>,
   }));
 };
 
@@ -78,7 +78,7 @@ export function DataTableDemo({ data }: { data: any[] }) {
   })
 
   return (
-    <div className="w-full">
+    <div className="w-full px-4">
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter..."
@@ -115,14 +115,14 @@ export function DataTableDemo({ data }: { data: any[] }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto max-w-screen-lg mx-auto">
+        <Table className="min-w-full text-white">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="text-white">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -143,7 +143,7 @@ export function DataTableDemo({ data }: { data: any[] }) {
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="text-white">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
