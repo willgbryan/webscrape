@@ -155,6 +155,7 @@ class Curator:
     async def fill_empty_rows(self, dataset: pd.DataFrame) -> pd.DataFrame:
         iter = 0
         final_dataset = dataset.copy()
+        await self.websocket.send_json({"type": "row_count", "output": final_dataset.shape[0]})
         final_dataset.fillna('Not found', inplace=True)
         for index, row in final_dataset.iterrows():
             for column in final_dataset.columns:

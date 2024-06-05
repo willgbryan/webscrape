@@ -7,8 +7,20 @@ import { SparklesCore } from "@/components/ui/Sparkles";
 import { GradientHeading } from "@/components/ui/GradientHeading";
 import { TextureCardContent, TextureCardHeader, TextureCardStyled } from "@/components/ui/TextureCard";
 import { AnimatedNumber } from "@/components/ui/NumberAnimations";
-import { DataTableDemo } from "@/components/ui/DataTable";
-import { TextAnimate } from "@/components/ui/TextAnimations"
+import { DataTable } from "@/components/ui/DataTable";
+import { Progress } from "@/components/ui/progress";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface CollectionExampleProps {
     setNumColumns: (numColumns: number) => void;
@@ -23,39 +35,65 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
     const [scrapeTopic, setScrapeTopic] = useState('');
     const [columns, setColumns] = useState('');
     const [dataset, setDataset] = useState<Record<string, any>>({});
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [fadeOut, setFadeOut] = useState(false);
+    const [progressVisible, setProgressVisible] = useState(false);
+    const [totalRows, setTotalRows] = useState(0);
     const datasetArray = Object.values(dataset);
 
-
-    // const [dataset, setDataset] = useState<any[]>([]); // State to hold the dataset
-
     const handleScrapeTopicChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setScrapeTopic(e.target.value);
+        if (datasetArray.length > 0) {
+            setIsAlertOpen(true);
+        } else {
+            setScrapeTopic(e.target.value);
+        }
     };
 
     const handleColumnsChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setColumns(value);
+        if (datasetArray.length > 0) {
+            setIsAlertOpen(true);
+        } else {
+            const value = e.target.value;
+            setColumns(value);
 
-        if (!showDetails && value.length > 0) {
-            setShowDetails(true);
+            if (!showDetails && value.length > 0) {
+                setShowDetails(true);
+            }
+
+            const rowCountMatch = value.match(/row count:\s*(\d+)/i);
+            const rowCount = rowCountMatch ? parseInt(rowCountMatch[1], 10) : 0;
+            const columnsCount = value.split(',').map(v => v.trim()).filter(v => v !== '' && !v.toLowerCase().startsWith('row count:')).length;
+
+            setNumRows(rowCount);
+            setNumColumns(columnsCount);
         }
+    };
 
-        const rowCountMatch = value.match(/row count:\s*(\d+)/i);
-        const rowCount = rowCountMatch ? parseInt(rowCountMatch[1], 10) : 0;
-        const columnsCount = value.split(',').map(v => v.trim()).filter(v => v !== '' && !v.toLowerCase().startsWith('row count:')).length;
+    const handleAlertCancel = () => {
+        setIsAlertOpen(false);
+    };
 
-        setNumRows(rowCount);
-        setNumColumns(columnsCount);
+    const handleAlertConfirm = () => {
+        setDataset({});
+        setIsAlertOpen(false);
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setShowDetails(false); // Hide details when "Curate" is clicked
-        console.log('Good submit')
-        try {
-            listenToSockEvents();
-        } catch (error) {
-            console.error('Error submitting form:', error);
+        if (datasetArray.length > 0) {
+            setIsAlertOpen(true);
+        } else {
+            setFadeOut(true);
+            setTimeout(() => {
+                setShowDetails(false);
+                setProgressVisible(true);
+            }, 1000); // Set showDetails to false and progressVisible to true after the fade-out animation completes
+            console.log('Good submit');
+            try {
+                listenToSockEvents();
+            } catch (error) {
+                console.error('Error submitting form:', error);
+            }
         }
     };
 
@@ -84,23 +122,23 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
             }
 
             const columnsInput = document.querySelector('#columns') as HTMLInputElement;
-            if(!columnsInput) {
+            if (!columnsInput) {
                 log('error', 'Columns input not found');
                 return;
             }
             const columnsValue = columnsInput.value;
 
             const columnHeaders = columnsValue.split(',')
-                                .map(v => v.trim())
-                                .filter(v => v !== '' && !v.toLowerCase().startsWith('row count:'))
-                                .join(', ');
+                .map(v => v.trim())
+                .filter(v => v !== '' && !v.toLowerCase().startsWith('row count:'))
+                .join(', ');
             console.log(`Column headers: ${columnHeaders}`)
 
             const rowCountMatch = columnsValue.match(/row count:\s*(\d+)/i);
             const rowCount = rowCountMatch ? parseInt(rowCountMatch[1], 10) : 0;
             console.log(`Row count: ${rowCount}`)
 
-            if(!columnHeaders) {
+            if (!columnHeaders) {
                 log('error', 'No column headers provided');
                 return;
             }
@@ -127,12 +165,9 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                             return { ...prevDataset, [data.id]: data.output };
                         }
                     });
+                } else if (data.type === 'row_count') {
+                    setTotalRows(data.output);
                 }
-                // log('info', `Received data of type: ${data.type}`);
-                // if (data.type === 'dataset') {
-                //     const parsedData = JSON.parse(data.output); // Ensure the data is parsed correctly
-                //     setDataset(parsedData); // Set the dataset state
-                // }
             } catch (error) {
                 log('error', `Error processing message: ${error}`);
             }
@@ -191,8 +226,8 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
             <div className="relative hidden bg-muted lg:block">
                 <div className="h-[56rem] w-full bg-black flex flex-col items-center justify-center overflow-hidden rounded-md">
                     {showDetails ? (
-                        <div>
-                            <div className={'flex flex-col sm:flex-row gap-2 p-4 transition-opacity duration-500 opacity-0 animate-fade-in'}>
+                        <div className={fadeOut ? 'animate-fade-out' : 'animate-fade-in'}>
+                            <div className={'flex flex-col sm:flex-row gap-2 p-4 transition-opacity duration-500'}>
                                 <PrecisionExample numColumns={numColumns} />
                                 <FormatExample numRows={numRows} />
                                 <CostExample numColumns={numColumns} numRows={numRows} />
@@ -219,10 +254,27 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                             </div>
                         </div>
                     ) : datasetArray.length > 0 && (
-                        <DataTableDemo data={datasetArray} />
+                        <>
+                            {progressVisible && <ProgressBar datasetArray={datasetArray} totalRows={totalRows} />}
+                            <DataTable data={datasetArray} />
+                        </>
                     )}
                 </div>
             </div>
+            <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action will clear the existing dataset. Are you sure you want to proceed?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={handleAlertCancel}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleAlertConfirm}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
@@ -316,3 +368,9 @@ export function Dashboard() {
 }
 
 export default Dashboard;
+
+function ProgressBar({ datasetArray, totalRows }: { datasetArray: any[], totalRows: number }) {
+    const progress = (datasetArray.length / totalRows) * 100;
+
+    return <Progress value={progress} className="w-[60%]" />
+}

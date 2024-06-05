@@ -73,7 +73,7 @@ const generateColumns = (data: any[]): ColumnDef<any>[] => {
   ];
 };
 
-export function DataTableDemo({ data }: { data: any[] }) {
+export function DataTable({ data }: { data: any[] }) {
   const { toast } = useToast()
   
   const columns = React.useMemo(() => generateColumns(data), [data]);
