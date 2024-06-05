@@ -76,6 +76,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
     const handleAlertConfirm = () => {
         setDataset({});
         setIsAlertOpen(false);
+        setShowDetails(true);
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -255,8 +256,8 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                         </div>
                     ) : datasetArray.length > 0 && (
                         <>
-                            {progressVisible && <ProgressBar datasetArray={datasetArray} totalRows={totalRows} />}
                             <DataTable data={datasetArray} />
+                            {progressVisible && <ProgressBar datasetArray={datasetArray} totalRows={totalRows} />}
                         </>
                     )}
                 </div>

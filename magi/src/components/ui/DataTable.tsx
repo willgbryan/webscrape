@@ -62,8 +62,8 @@ const generateColumns = (data: any[]): ColumnDef<any>[] => {
           aria-label="Select row"
         />
       ),
-      enableSorting: false,
-      enableColumnFilter: false,
+      enableSorting: true,
+      enableColumnFilter: true,
     },
     ...Object.keys(sample).map((key) => ({
       accessorKey: key,
@@ -133,18 +133,18 @@ export function DataTable({ data }: { data: any[] }) {
 
   return (
     <div className="w-full px-6">
-      <div className="flex items-center py-4">
+      <div className="flex items-center py-4 bg-transparent">
         <Input
           placeholder="Filter..."
           value={(table.getColumn(columnFilters[0]?.id ?? "")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn(columnFilters[0]?.id ?? "")?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
+          className="max-w-sm bg-transparent text-white"
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
+            <Button variant="ghost" className="ml-auto text-white">
               Columns <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -221,7 +221,8 @@ export function DataTable({ data }: { data: any[] }) {
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <Button
-          variant="outline"
+          variant="ghost"
+          className="text-white"
           onClick={copyToClipboard}
         >
           Copy to Clipboard
@@ -232,7 +233,8 @@ export function DataTable({ data }: { data: any[] }) {
         </div>
         <div className="space-x-2">
           <Button
-            variant="outline"
+            variant="ghost"
+            className="text-white"
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
@@ -240,7 +242,8 @@ export function DataTable({ data }: { data: any[] }) {
             Previous
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
+            className="text-white"
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
