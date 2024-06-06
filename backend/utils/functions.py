@@ -13,13 +13,14 @@ from backend.utils.llm import create_chat_completion
 
 async def generate_row(
         existing_data,
+        user_query,
         context,
         columns,
         websocket,
         role_prompt,
         cfg,
     ):
-        content = (f"{generate_row_prompt(context, columns, existing_data)}")
+        content = (f"{generate_row_prompt(context, columns, existing_data, user_query)}")
 
         try:
             report = await create_chat_completion(

@@ -118,6 +118,7 @@ class Curator:
 
             dataset = await generate_row(
                 existing_data=existing_dataset_str,
+                user_query=self.query,
                 context=self.context,
                 columns=self.columns,
                 websocket=self.websocket,

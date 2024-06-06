@@ -35,10 +35,10 @@ def generate_summary_prompt(query, data):
            f'query cannot be answered using the text, YOU MUST summarize the text in short.\n Include all factual ' \
            f'information such as numbers, stats, quotes, etc if available. '
 
-def generate_row_prompt(data, columns, existing_data):
+def generate_row_prompt(data, columns, existing_data, user_query):
     prompt = (
-        f"Presented with a corpus of information: {data}, and some already collected data: {existing_data}" \
-        f"Your task is to parse the corpus and populate the columns with new information: {columns}." \
+        f"Presented with a corpus of information: {data}, the user's question: {user_query}, and some already collected data: {existing_data}" \
+        f"Your task is to parse the corpus and populate the columns with new information: {columns} as it pertains to the user's question." \
         f"RETURN VALID .csv with column headers: {columns}, populated with appropriate values from the corpus. DO NOT add new column headers." \
         "Ensure that fresh information is added to the dataset if existing data is provided, avoid duplicate rows. If no appropriate value can be added, add: 'Not found'" \
         "My job depends on you returning valid csv, please try your best!"
