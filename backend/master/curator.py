@@ -6,7 +6,7 @@ from backend.context.compression import ContextCompressor
 from backend.master.prompts import generate_role_prompt, generate_subquery_role_prompt, fill_empty_value_prompt, empty_value_prompt
 from backend.memory.embeddings import Memory
 from backend.utils.functions import generate_row, get_retriever, get_sub_queries, scrape_urls, stream_output, summarize_dataframe
-from backend.utils.llm import create_chat_completion, parse_chat_completion_for_csv
+from backend.utils.llm import create_chat_completion, parse_chat_completion_for_json
 
 class Curator:
     def __init__(
@@ -128,7 +128,7 @@ class Curator:
 
             print(f'pass {iter}: {dataset}')
 
-            new_data = await parse_chat_completion_for_csv(dataset)
+            new_data = await parse_chat_completion_for_json(dataset)
             await asyncio.sleep(0)  # Ensures new_data is fully instantiated before proceeding
             new_data.reset_index(drop=True, inplace=True)
 

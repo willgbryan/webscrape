@@ -77,10 +77,12 @@ async def create_chat_completion(
     logging.error("Failed to get response from OpenAI API")
     raise RuntimeError("Failed to get response from OpenAI API")
 
-async def parse_chat_completion_for_csv(output: str) -> pd.DataFrame:
-    csv_content = output.split("```csv\n", 1)[1].rsplit("\n```", 1)[0]
-    data = StringIO(csv_content)
-    print('Broke if frozen here')
-    df = pd.read_csv(data)
-    time.sleep(10)
+async def parse_chat_completion_for_json(output: str | dict) -> pd.DataFrame:
+    if isinstance(output, str):
+        output = output.strip('```json').strip('```').strip()
+        output_dict = json.loads(output)
+    else:
+        output_dict = output
+    
+    df = pd.DataFrame(output_dict)
     return df
