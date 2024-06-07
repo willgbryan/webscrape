@@ -141,8 +141,8 @@ class Curator:
                 print("New data is empty, skipping this iteration.")
                 continue
 
-            new_data_dict = new_data.to_dict('records')
-            data_list.extend(new_data_dict)
+            # new_data_dict = new_data.to_dict('records')
+            data_list.extend(new_data)
             
             # Remove duplicates manually since we are not using pandas
             data_list = [dict(t) for t in {tuple(d.items()) for d in data_list}]
@@ -187,9 +187,13 @@ class Curator:
                     if value:
                         final_dataset.at[index, column] = value
                         updated_row = final_dataset.iloc[index].to_dict()
-                        # Use `index` directly for row_id to match the current row's index
                         row_id = index
                         print(f'row_id {row_id}, iteration {iter}')
                         await self.websocket.send_json({"type": "row_update", "id": row_id, "output": updated_row})
                         iter += 1
+                else:
+                    row_id = index
+                    current_row = final_dataset.iloc[index].to_dict()
+                    await self.websocket.send_json({"type": "row_update", "id": row_id, "output": current_row})
+
         return final_dataset
