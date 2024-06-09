@@ -142,10 +142,11 @@ class Curator:
                 continue
 
             # new_data_dict = new_data.to_dict('records')
-            data_list.extend(new_data)
+            data_list.extend(new_data.to_dict('records'))
+            print(f'data list: {data_list}')
             
             # Remove duplicates manually since we are not using pandas
-            data_list = [dict(t) for t in {tuple(d.items()) for d in data_list}]
+            # data_list = [dict(t) for t in {tuple(d.items()) for d in data_list}]
             
             check_len = len(data_list)
             print(f'Updated existing data:\n{pd.DataFrame(data_list)}')
