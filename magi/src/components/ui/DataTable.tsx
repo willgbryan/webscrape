@@ -242,7 +242,8 @@ export function DataTable({ data }: { data: any[] }) {
             Previous
           </Button>
           <Button
-            variant="secondary"
+            variant="ghost"
+            className="text-white"
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
