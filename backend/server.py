@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile, Form
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile, Form, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import json
 import os
 import aiofiles
+import pandas as pd
 from typing import List
 from backend.utils.websocket_manager import WebSocketManager
 from output_gen_utils import write_md_to_pdf
@@ -33,13 +34,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# #TODO nothing todo just tagging as preserved for now while react migration is in progress
-# app.mount("/site", StaticFiles(directory="./frontend"), name="site")
-# app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
-
-# templates = Jinja2Templates(directory="./frontend")
-# # app.mount("/", StaticFiles(directory="reach-react-app/build", html=True), name="react_app")
-
 manager = WebSocketManager()
 
 # Dynamic directory for outputs once first research is run
@@ -49,9 +43,6 @@ def startup_event():
         os.makedirs("outputs")
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
 
-# @app.get("/")
-# async def read_root(request: Request):
-#     return templates.TemplateResponse('index.html', {"request": request, "report": None})
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -70,7 +61,6 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 if task:
                     report = await manager.start_streaming(task, columns, rows, websocket)
-                    # Ensure the output is sent as a JSON string
                     await websocket.send_json({"type": "dataset", "output": report})
                     print(f"report: {report}")
                 else:
@@ -82,3 +72,20 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"WebSocket error: {e}")
 
 
+@app.post("/uploadfile/")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        if file.content_type not in ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
+            raise HTTPException(status_code=400, detail="Invalid file type")
+
+        if file.content_type == "text/csv":
+            df = pd.read_csv(file.file)
+        elif file.content_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+            df = pd.read_excel(file.file)
+
+        output_path = os.path.join("outputs", file.filename)
+        df.to_csv(output_path, index=False)
+
+        return {"filename": file.filename, "message": "File uploaded successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

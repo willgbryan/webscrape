@@ -34,4 +34,4 @@ htmldocx
 lxml[html_clean]
 litellm
 youtube-transcript-api
-aiofiles 
+openpyxl
