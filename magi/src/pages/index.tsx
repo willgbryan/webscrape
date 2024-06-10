@@ -1,3 +1,5 @@
+import * as React from "react"
+
 import { useState, ChangeEvent, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +11,7 @@ import { TextureCardContent, TextureCardHeader, TextureCardStyled } from "@/comp
 import { AnimatedNumber } from "@/components/ui/NumberAnimations";
 import { DataTable } from "@/components/ui/DataTable";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import {
   AlertDialog,
@@ -39,6 +42,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
     const [fadeOut, setFadeOut] = useState(false);
     const [progressVisible, setProgressVisible] = useState(false);
     const [totalRows, setTotalRows] = useState(0);
+    const [showCurateButton, setShowCurateButton] = useState(true);
     const datasetArray = Object.values(dataset);
 
     const handleScrapeTopicChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -46,6 +50,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
             setIsAlertOpen(true);
         } else {
             setScrapeTopic(e.target.value);
+            setShowCurateButton(true);
         }
     };
 
@@ -55,6 +60,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
         } else {
             const value = e.target.value;
             setColumns(value);
+            setShowCurateButton(true);
 
             if (!showDetails && value.length > 0) {
                 setShowDetails(true);
@@ -76,7 +82,9 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
     const handleAlertConfirm = () => {
         setDataset({});
         setIsAlertOpen(false);
+        setFadeOut(false);
         setShowDetails(true);
+        setProgressVisible(false);
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -85,10 +93,11 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
             setIsAlertOpen(true);
         } else {
             setFadeOut(true);
+            setShowCurateButton(false);
             setTimeout(() => {
                 setShowDetails(false);
                 setProgressVisible(true);
-            }, 1000); // Set showDetails to false and progressVisible to true after the fade-out animation completes
+            }, 1000);
             console.log('Good submit');
             try {
                 listenToSockEvents();
@@ -218,9 +227,16 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                                 required 
                             />
                         </div>
-                        <Button type="submit" className="w-full">
-                            Curate
-                        </Button>
+                        {showCurateButton && (
+                            <Button type="submit" className="w-full">
+                                Curate
+                            </Button>
+                        )}
+                        {progressVisible && (
+                            <div className="flex justify-center">
+                                <ProgressBar datasetArray={datasetArray} totalRows={totalRows} />
+                            </div>
+                        )}
                     </div>
                 </form>
             </div>
@@ -255,10 +271,11 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                             </div>
                         </div>
                     ) : datasetArray.length > 0 && (
-                        <>
-                            <DataTable data={datasetArray} />
-                            {progressVisible && <ProgressBar datasetArray={datasetArray} totalRows={totalRows} />}
-                        </>
+                        <div className="w-full h-full flex items-center justify-center">
+                            <ScrollArea className="h-[50rem] w-[95%] rounded-md border">
+                                <DataTable data={datasetArray} />
+                            </ScrollArea>
+                        </div>
                     )}
                 </div>
             </div>

@@ -29,7 +29,7 @@ class Config:
             "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
         )
         self.max_search_results_per_query = int(
-            os.getenv("MAX_SEARCH_RESULTS_PER_QUERY", 5)
+            os.getenv("MAX_SEARCH_RESULTS_PER_QUERY", 7)
         )
         self.memory_backend = os.getenv("MEMORY_BACKEND", "local")
         self.max_iterations = int(os.getenv("MAX_ITERATIONS", 2))
