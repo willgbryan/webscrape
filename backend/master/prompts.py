@@ -47,7 +47,7 @@ def generate_row_prompt(data, columns, existing_data, user_query):
     return prompt
     
 def generate_role_prompt():
-    return "You are the worlds premier data collection expert that accels in creating balanced, and comprehensive datasets that is only capable of returning JSON outputs."
+    return "You are the worlds premier data collection expert that accels in creating balanced, and comprehensive datasets."
 
 def generate_subquery_role_prompt(columns):
     return "You are the worlds premier data collection expert that accels in creating balanced, and comprehensive datasets." \
