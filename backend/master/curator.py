@@ -30,6 +30,7 @@ class Curator:
         self.existing_data = pd.DataFrame()
         self.memory = Memory(self.cfg.embedding_provider)
         self.visited_urls = visited_urls
+        self.sub_queries = []
 
     async def conduct_research(self):
         self.context = await self.get_context_by_search(self.query)
@@ -54,12 +55,12 @@ class Curator:
         print(f'query: {query}')
         print(f'cfg: {self.cfg}')
 
-        sub_queries = await get_sub_queries(query=query, agent_role_prompt=prompt, cfg=self.cfg) + [query]
-        print(f'sub queries: {sub_queries}')
-        await stream_output("logs", f"I will conduct my research based on the following queries: {sub_queries}...", self.websocket)
+        self.sub_queries = await get_sub_queries(query=query, agent_role_prompt=prompt, cfg=self.cfg) + [query]
+        print(f'sub queries: {self.sub_queries}')
+        await stream_output("logs", f"I will conduct my research based on the following queries: {self.sub_queries}...", self.websocket)
 
         content = []
-        for sub_query in sub_queries:
+        for sub_query in self.sub_queries:
             await stream_output("logs", f"\nRunning research for '{sub_query}'...", self.websocket)
             scraped_sites = await self.scrape_sites_by_query(sub_query)
             print(f"scraped sites: {scraped_sites}")
@@ -101,6 +102,7 @@ class Curator:
         check_len = 0
         iter = 1
         data_list = []
+        previous_prompts = []
 
         while check_len < self.rows:
             if data_list:
@@ -150,6 +152,15 @@ class Curator:
             
             check_len = len(data_list)
             print(f'Updated existing data:\n{pd.DataFrame(data_list)}')
+            
+            # update running list of previously searched prompts
+            previous_prompts += self. sub_queries
+            print(f'Previous prompts: {previous_prompts}')
+
+            self.query += f"The following queries have already been searched, ensure that the queries you generate a different than: {previous_prompts}."
+            print(f'new query {self.query}')
+            # generate new context after each iteration
+            self.context = await self.get_context_by_search(self.query)
 
         output_dataset = pd.DataFrame(data_list)
         return output_dataset

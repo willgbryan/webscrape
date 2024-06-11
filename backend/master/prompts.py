@@ -40,7 +40,8 @@ def generate_row_prompt(data, columns, existing_data, user_query):
         f"Presented with a corpus of information: {data}, the user's question: {user_query}, and some already collected data: {existing_data}" \
         f"Your task is to parse the corpus and populate the columns with new information: {columns} as it pertains to the user's question." \
         f"RETURN VALID JSON with column headers: {columns}, populated with appropriate values from the corpus. DO NOT add new column headers." \
-        "Ensure that fresh information is added to the dataset if existing data is provided, avoid duplicate rows. If no appropriate value can be added, add: 'Not found'" \
+        "DO NOT duplicate rows, be cognizant of the already collected data and only add unique rows." \
+        "If no appropriate value can be added, add: 'Not found'" \
         "My job depends on you returning valid JSON, please try your best!"
     )
     return prompt
