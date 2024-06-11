@@ -55,7 +55,8 @@ class Curator:
         print(f'query: {query}')
         print(f'cfg: {self.cfg}')
 
-        self.sub_queries = await get_sub_queries(query=query, agent_role_prompt=prompt, cfg=self.cfg) + [query]
+        # query might be getting too long after an iteration of create_rows, trimming it.
+        self.sub_queries = await get_sub_queries(query=query, agent_role_prompt=prompt, cfg=self.cfg) #+ [query]
         print(f'sub queries: {self.sub_queries}')
         await stream_output("logs", f"I will conduct my research based on the following queries: {self.sub_queries}...", self.websocket)
 
