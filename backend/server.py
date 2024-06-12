@@ -59,8 +59,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 rows = json_data.get("rowCount")
                 print(f"Parsed task: {task}, columns: {columns}, rows: {rows}")
 
+                # upload = True if a file has been uploaded as the env variable will exist, otherwise its false
+                upload = "UPLOADED_FILE_PATH" in os.environ
+
                 if task:
-                    report = await manager.start_streaming(task, columns, rows, websocket)
+                    report = await manager.start_streaming(task, columns, rows, websocket, upload)
                     await websocket.send_json({"type": "dataset", "output": report})
                     print(f"report: {report}")
                 else:
@@ -86,6 +89,8 @@ async def upload_file(file: UploadFile = File(...)):
         output_path = os.path.join("outputs", file.filename)
         df.to_csv(output_path, index=False)
 
-        return {"filename": file.filename, "message": "File uploaded successfully"}
+        os.environ["UPLOADED_FILE_PATH"] = output_path
+
+        return {"filename": file.filename, "message": "File uploaded successfully", "path": output_path}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

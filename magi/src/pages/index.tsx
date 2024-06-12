@@ -43,6 +43,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
     const [progressVisible, setProgressVisible] = useState(false);
     const [totalRows, setTotalRows] = useState(0);
     const [showCurateButton, setShowCurateButton] = useState(true);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const datasetArray = Object.values(dataset);
 
     const handleScrapeTopicChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -85,6 +86,35 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
         setFadeOut(false);
         setShowDetails(true);
         setProgressVisible(false);
+    };
+
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setSelectedFile(e.target.files[0]);
+        }
+    };
+
+    const handleFileUpload = async () => {
+        if (!selectedFile) return;
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        try {
+            const response = await fetch("http://localhost:8000/uploadfile/", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log("File uploaded successfully:", result);
+            } else {
+                console.error("File upload failed:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error uploading file:", error);
+        }
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -227,6 +257,15 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                                 required 
                             />
                         </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="upload">Upload CSV/XLSX</Label>
+                            <Input 
+                                id="upload" 
+                                type="file" 
+                                accept=".csv, .xlsx"
+                                onChange={handleFileChange} 
+                            />
+                        </div>
                         {showCurateButton && (
                             <Button type="submit" className="w-full">
                                 Curate
@@ -261,7 +300,7 @@ function CollectionExample({ setNumColumns, setNumRows, numColumns, numRows, sho
                                     background="transparent"
                                     minSize={0.4}
                                     maxSize={1}
-                                    particleDensity={Math.min(numRows, 4000)}  // Increase particle density with numRows, with a ceiling of 10000
+                                    particleDensity={Math.min(numRows, 4000)}
                                     className="w-full h-full"
                                     particleColor="#FFFFFF"
                                 />

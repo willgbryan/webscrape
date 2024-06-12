@@ -1,6 +1,7 @@
 # connect any client to gpt-researcher using websocket
 import asyncio
 import datetime
+import os
 from typing import Dict, List
 
 from fastapi import WebSocket
@@ -48,13 +49,13 @@ class WebSocketManager:
             del self.sender_tasks[websocket]
             del self.message_queues[websocket]
 
-    async def start_streaming(self, task, columns, rows, websocket):
+    async def start_streaming(self, task, columns, rows, websocket, upload):
         """Start streaming the output."""
-        dataset = await iter_curate(task, columns, rows, websocket)
+        dataset = await iter_curate(task, columns, rows, websocket, upload)
         return dataset
 
 
-async def iter_curate(task, columns, rows, websocket):
+async def iter_curate(task, columns, rows, websocket, upload):
     """Run the scrape"""
     start_time = datetime.datetime.now()
     print(f'stream start cols: {columns}')
@@ -66,7 +67,8 @@ async def iter_curate(task, columns, rows, websocket):
         columns=columns, 
         rows=rows,
         config_path=config_path, 
-        websocket=websocket
+        websocket=websocket,
+        upload=upload
     )
     dataset = await researcher.run()
 

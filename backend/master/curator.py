@@ -17,10 +17,12 @@ class Curator:
          rows, 
          config_path=None, 
          websocket=None,
+         upload=False,
          visited_urls=set()
      ):
         self.query = query
         self.websocket = websocket
+        self.upload = upload
         self.cfg = Config(config_path)
         self.retriever = get_retriever(self.cfg.retriever)
         self.context = []
